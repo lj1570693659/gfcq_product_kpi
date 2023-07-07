@@ -22,7 +22,8 @@ func (s *contextService) Get(ctx context.Context) *model.Context {
 	if value == nil {
 		return nil
 	}
-	if localCtx, ok := value.(*model.Context); ok {
+	localCtx, ok := value.(*model.Context)
+	if ok {
 		return localCtx
 	}
 	return nil

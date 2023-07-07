@@ -13,31 +13,33 @@ type User internal.User
 
 // 注册请求参数，用于前后端交互参数格式约定
 type UserApiSignUpReq struct {
-	Passport  string `v:"required|length:6,16#账号不能为空|账号长度应当在:min到:max之间"`
-	Password  string `v:"required|length:6,16#请输入确认密码|密码长度应当在:min到:max之间"`
-	Password2 string `v:"required|length:6,16|same:Password#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等"`
-	Nickname  string
+	WorkNumber string `v:"required|length:6,16#账号不能为空|账号长度应当在:min到:max之间"`
+	Password   string `v:"required|length:6,16#请输入确认密码|密码长度应当在:min到:max之间"`
+	Password2  string `v:"required|length:6,16|same:Password#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等"`
+	UserName   string `v:"required#姓名不能为空"`
 }
 
 // 登录请求参数，用于前后端交互参数格式约定
 type UserApiSignInReq struct {
-	Passport string `v:"required#账号不能为空"`
-	Password string `v:"required#密码不能为空"`
+	WorkNumber string `v:"required#账号不能为空"`
+	Password   string `v:"required#密码不能为空"`
 }
 
 // 账号唯一性检测请求参数，用于前后端交互参数格式约定
-type UserApiCheckPassportReq struct {
-	Passport string `v:"required#账号不能为空"`
+type UserApiCheckWorkNumberReq struct {
+	WorkNumber string `v:"required#账号不能为空"`
 }
 
 // 昵称唯一性检测请求参数，用于前后端交互参数格式约定
-type UserApiCheckNickNameReq struct {
-	Nickname string `v:"required#昵称不能为空"`
+type UserApiCheckUserNameReq struct {
+	UserName string `v:"required#昵称不能为空"`
 }
 
 // 注册输入参数
 type UserServiceSignUpReq struct {
-	Passport string
-	Password string
-	Nickname string
+	WorkNumber string
+	Password   string
+	UserName   string
+	CreateTime string
+	UpdateTime string
 }

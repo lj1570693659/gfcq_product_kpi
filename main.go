@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
 	"github.com/gogf/gf/frame/g"
 	_ "github.com/lj1570693659/gfcq_product_kpi/boot"
 	_ "github.com/lj1570693659/gfcq_product_kpi/router"

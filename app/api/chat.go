@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-// 聊天管理器
+// Chat 聊天管理器
 var Chat = &chatApi{}
 
 type chatApi struct{}
@@ -33,7 +33,7 @@ var (
 	cache = gcache.New()         // 使用特定的缓存对象，不使用全局缓存对象
 )
 
-// @summary 聊天室首页
+// Index @summary 聊天室首页
 // @description 聊天室首页，只显示模板内容。如果当前用户未登录，那么引导跳转到名称设置页面。
 // @tags    聊天室
 // @produce html

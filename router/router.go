@@ -15,11 +15,15 @@ func init() {
 			service.Middleware.Ctx,
 			service.Middleware.CORS,
 		)
-		group.ALL("/chat", api.Chat)
+		//group.ALL("/chat", api.Chat)
+
+		// 登录账号相关
 		group.ALL("/user", api.User)
-		group.Group("/", func(group *ghttp.RouterGroup) {
+		// 员工信息相关
+		group.Group("/employee", func(group *ghttp.RouterGroup) {
 			group.Middleware(service.Middleware.Auth)
-			group.ALL("/user/profile", api.User.Profile)
+			group.GET("/isSyncEmployee", api.Employee.IsSyncEmployee)
+			group.POST("/create", api.Employee.Create)
 		})
 	})
 }
