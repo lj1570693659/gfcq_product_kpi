@@ -13,12 +13,12 @@ import (
 	"github.com/lj1570693659/gfcq_product_kpi/library/util"
 )
 
-// 中间件管理服务
+// User 中间件管理服务
 var User = userService{}
 
 type userService struct{}
 
-// 用户注册
+// SignUp 用户注册
 func (s *userService) SignUp(ctx context.Context, r *model.UserServiceSignUpReq) error {
 	// 账号唯一性数据检查
 	if !s.CheckWorkNumber(ctx, r.WorkNumber) {
@@ -35,13 +35,13 @@ func (s *userService) SignUp(ctx context.Context, r *model.UserServiceSignUpReq)
 
 // IsSignedIn 判断用户是否已经登录
 func (s *userService) IsSignedIn(ctx context.Context) bool {
-	if v := Context.Get(ctx); v != nil && v.User != nil {
+	if v := Context.Get(ctx); v != nil && v.User != nil && v.User.UserInfo != nil {
 		return true
 	}
 	return false
 }
 
-// 用户登录，成功返回用户信息，否则返回nil; WorkNumber应当会md5值字符串
+// SignIn 用户登录，成功返回用户信息，否则返回nil; WorkNumber应当会md5值字符串
 func (s *userService) SignIn(ctx context.Context, WorkNumber, password string) error {
 	var user *entity.User
 	err := dao.User.Ctx(ctx).Where(dao.User.Columns().WorkNumber, WorkNumber).Where(dao.User.Columns().Password, util.Encrypt(password)).Scan(&user)
@@ -57,15 +57,22 @@ func (s *userService) SignIn(ctx context.Context, WorkNumber, password string) e
 	if err := Session.SetUser(ctx, sessionUser); err != nil {
 		return err
 	}
-	Context.SetUser(ctx, &model.ContextUser{
+	Context.SetUserInfo(ctx, &model.UserInfo{
 		Id:         gconv.Uint(user.Id),
 		WorkNumber: user.WorkNumber,
 		UserName:   user.UserName,
 	})
+
+	employeeInfo, err := Employee.GetOne(ctx, &model.EmployeeApiGetOneReq{model.Employee{WorkNumber: user.WorkNumber}})
+	if err != nil {
+		return err
+	}
+	fmt.Println("employeeInfo.EmployeeInfo-----------login-------------", employeeInfo.EmployeeInfo)
+	Context.SetUserEmployee(ctx, employeeInfo.EmployeeInfo)
 	return nil
 }
 
-// 用户注销
+// SignOut 用户注销
 func (s *userService) SignOut(ctx context.Context) error {
 	return Session.RemoveUser(ctx)
 }
@@ -79,7 +86,7 @@ func (s *userService) CheckWorkNumber(ctx context.Context, WorkNumber string) bo
 	}
 }
 
-// 获得用户信息详情
+// GetProfile 获得用户信息详情
 func (s *userService) GetProfile(ctx context.Context) *model.User {
 	return Session.GetUser(ctx)
 }

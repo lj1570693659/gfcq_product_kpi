@@ -8,7 +8,7 @@ import (
 	"github.com/lj1570693659/gfcq_product_kpi/library/response"
 )
 
-// 用户API管理对象
+// User 用户API管理对象
 var User = new(userApi)
 
 type userApi struct{}
@@ -17,7 +17,7 @@ type userApi struct{}
 // @tags    用户服务
 // @produce json
 // @param   entity  body model.UserApiSignUpReq true "注册请求"
-// @router  /user/signup [POST]
+// @router  /system/account/user/signup [POST]
 // @success 200 {object} response.JsonResponse "执行结果"
 func (a *userApi) SignUp(r *ghttp.Request) {
 	var (
@@ -42,7 +42,7 @@ func (a *userApi) SignUp(r *ghttp.Request) {
 // @produce json
 // @param   passport formData string true "用户账号"
 // @param   password formData string true "用户密码"
-// @router  /user/signin [POST]
+// @router  /system/account/user/signin [POST]
 // @success 200 {object} response.JsonResponse "执行结果"
 func (a *userApi) SignIn(r *ghttp.Request) {
 	var (
@@ -61,16 +61,22 @@ func (a *userApi) SignIn(r *ghttp.Request) {
 // IsSignedIn @summary 判断用户是否已经登录
 // @tags    用户服务
 // @produce json
-// @router  /user/issignedin [GET]
+// @router  /system/account/user/issignedin [GET]
 // @success 200 {object} response.JsonResponse "执行结果:`true/false`"
 func (a *userApi) IsSignedIn(r *ghttp.Request) {
-	response.JsonExit(r, response.Success, "", service.User.IsSignedIn(r.Context()))
+	isSignedIn := service.User.IsSignedIn(r.Context())
+	if isSignedIn {
+		response.JsonExit(r, response.Success, "已登录")
+	} else {
+		response.JsonExit(r, response.NotSignedIn, "请先登录或注册")
+	}
+
 }
 
 // SignOut @summary 用户注销/退出接口
 // @tags    用户服务
 // @produce json
-// @router  /user/signout [GET]
+// @router  /system/account/user/signout [GET]
 // @success 200 {object} response.JsonResponse "执行结果, 1: 未登录"
 func (a *userApi) SignOut(r *ghttp.Request) {
 	if err := service.User.SignOut(r.Context()); err != nil {
@@ -82,7 +88,7 @@ func (a *userApi) SignOut(r *ghttp.Request) {
 // @summary 获取用户详情信息
 // @tags    用户服务
 // @produce json
-// @router  /user/profile [GET]
+// @router  /system/account/user/profile [GET]
 // @success 200 {object} model.User "用户信息"
 func (a *userApi) Profile(r *ghttp.Request) {
 	response.JsonExit(r, response.Success, "", service.User.GetProfile(r.Context()))

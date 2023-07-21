@@ -6,6 +6,7 @@ package model
 
 import (
 	"github.com/gogf/gf/net/ghttp"
+	"github.com/lj1570693659/gfcq_product_kpi/app/model/entity"
 )
 
 const (
@@ -21,6 +22,14 @@ type Context struct {
 
 // ContextUser 请求上下文中的用户信息
 type ContextUser struct {
+	UserInfo       *UserInfo           `json:"userInfo"`       // 系统账号信息
+	EmployeeInfo   Employee            `json:"employeeInfo"`   // 员工主体信息
+	JobInfo        []entity.Job        `json:"jobInfo"`        // 员工岗位信息
+	DepartmentInfo []entity.Department `json:"departmentInfo"` // 员工所在部门信息
+	ProductLists   []entity.Product    `json:"productLists"`   // 员工参与项目信息
+}
+
+type UserInfo struct {
 	Id           uint   // 用户ID
 	EmployeeId   int    `json:"employeeId" `   // 员工ID
 	UserName     string `json:"userName"     ` // 员工姓名

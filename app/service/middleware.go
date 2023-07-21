@@ -21,22 +21,65 @@ func (s *middlewareService) Ctx(r *ghttp.Request) {
 	}
 	Context.Init(r, customCtx)
 	if user := Session.GetUser(r.Context()); user != nil {
-		customCtx.User = &model.ContextUser{
+		customCtx.User = &model.ContextUser{}
+		customCtx.User.UserInfo = &model.UserInfo{
 			Id:         gconv.Uint(user.Id),
 			WorkNumber: user.WorkNumber,
 			Password:   user.Password,
 		}
+
+		// 完善上下文员工信息
+		employeeInfo, err := Employee.GetOne(r.Context(), &model.EmployeeApiGetOneReq{
+			model.Employee{
+				WorkNumber: user.WorkNumber,
+			},
+		})
+
+		if err != nil {
+			response.JsonExit(r, http.StatusForbidden, err.Error())
+		}
+		Context.SetUserEmployee(r.Context(), employeeInfo.EmployeeInfo)
+		Context.SetUserDepartment(r.Context(), employeeInfo.DepartmentInfo)
+		Context.SetUserJob(r.Context(), employeeInfo.JobInfo)
+		Context.SetUserProduct(r.Context(), employeeInfo.ProductInfo)
 	}
+
 	// 执行下一步请求逻辑
 	r.Middleware.Next()
 }
 
-// Auth 鉴权中间件，只有登录成功之后才能通过
-func (s *middlewareService) Auth(r *ghttp.Request) {
+// LoggedIn 鉴权中间件，验证是否登录
+func (s *middlewareService) LoggedIn(r *ghttp.Request) {
 	if User.IsSignedIn(r.Context()) {
 		r.Middleware.Next()
 	} else {
 		response.JsonExit(r, http.StatusForbidden, "")
+	}
+}
+
+// Role 鉴权中间件，验证是否在允许角色组内 TODO
+func (s *middlewareService) Role(r *ghttp.Request) {
+	ok, err := Casbin.CheckAuth(r.Context(), Context.Get(r.Context()).User, r, ROLE)
+	if err != nil {
+		response.JsonExit(r, http.StatusForbidden, err.Error())
+	}
+	if ok {
+		r.Middleware.Next()
+	} else {
+		response.JsonExit(r, http.StatusForbidden, err.Error())
+	}
+}
+
+// BusinessRole 鉴权中间件，验证是否在项目组内 TODO
+func (s *middlewareService) BusinessRole(r *ghttp.Request) {
+	ok, err := Casbin.CheckAuth(r.Context(), Context.Get(r.Context()).User, r, BUSINESS_ROLE)
+	if err != nil {
+		response.JsonExit(r, http.StatusForbidden, err.Error())
+	}
+	if ok {
+		r.Middleware.Next()
+	} else {
+		response.JsonExit(r, http.StatusForbidden, err.Error())
 	}
 }
 

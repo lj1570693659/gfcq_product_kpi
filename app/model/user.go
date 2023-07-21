@@ -11,7 +11,7 @@ import (
 // User is the golang structure for table user.
 type User internal.User
 
-// 注册请求参数，用于前后端交互参数格式约定
+// UserApiSignUpReq 注册请求参数，用于前后端交互参数格式约定
 type UserApiSignUpReq struct {
 	WorkNumber string `v:"required|length:6,16#账号不能为空|账号长度应当在:min到:max之间"`
 	Password   string `v:"required|length:6,16#请输入确认密码|密码长度应当在:min到:max之间"`
@@ -19,23 +19,23 @@ type UserApiSignUpReq struct {
 	UserName   string `v:"required#姓名不能为空"`
 }
 
-// 登录请求参数，用于前后端交互参数格式约定
+// UserApiSignInReq 登录请求参数，用于前后端交互参数格式约定
 type UserApiSignInReq struct {
 	WorkNumber string `v:"required#账号不能为空"`
 	Password   string `v:"required#密码不能为空"`
 }
 
-// 账号唯一性检测请求参数，用于前后端交互参数格式约定
+// UserApiCheckWorkNumberReq 账号唯一性检测请求参数，用于前后端交互参数格式约定
 type UserApiCheckWorkNumberReq struct {
 	WorkNumber string `v:"required#账号不能为空"`
 }
 
-// 昵称唯一性检测请求参数，用于前后端交互参数格式约定
+// UserApiCheckUserNameReq 昵称唯一性检测请求参数，用于前后端交互参数格式约定
 type UserApiCheckUserNameReq struct {
 	UserName string `v:"required#昵称不能为空"`
 }
 
-// 注册输入参数
+// UserServiceSignUpReq 注册输入参数
 type UserServiceSignUpReq struct {
 	WorkNumber string
 	Password   string

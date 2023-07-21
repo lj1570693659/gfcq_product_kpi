@@ -23,6 +23,7 @@ type EmployeeJobColumns struct {
 	Id         string //
 	EmployeeId string // 员工信息
 	JobId      string // 岗位信息
+	DepartId   string // 所属部门
 	Remark     string // 预留备注信息
 	CreateTime string // 数据新增时间
 	UpdateTime string // 最后一次更新数据时间
@@ -33,6 +34,7 @@ var employeeJobColumns = EmployeeJobColumns{
 	Id:         "id",
 	EmployeeId: "employee_id",
 	JobId:      "job_id",
+	DepartId:   "depart_id",
 	Remark:     "remark",
 	CreateTime: "create_time",
 	UpdateTime: "update_time",
