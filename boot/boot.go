@@ -92,5 +92,7 @@ func init() {
 	StageRadioServer = inspirit.NewStageRadioClient(ConfigServer)
 
 	s := g.Server()
+	s.SetFileServerEnabled(true)
+	s.AddSearchPath("./public/excel")
 	s.Plugin(&swagger.Swagger{})
 }

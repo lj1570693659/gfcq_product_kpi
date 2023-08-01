@@ -11,6 +11,7 @@ import (
 // ProductMemberKpi is the golang structure for table product_member_kpi.
 type ProductMemberKpi struct {
 	Id            uint        `json:"id"            ` //
+	IsPm          uint        `json:"isPm"          ` // 是否是PM（1：是 2：否）
 	ProId         uint        `json:"proId"         ` // 项目ID
 	ProEmpId      uint        `json:"proEmpId"      ` // 小组成员ID
 	ProStageId    uint        `json:"proStageId"    ` // 项目-阶段ID

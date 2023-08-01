@@ -16,6 +16,7 @@ type ProductRoles struct {
 	Name       interface{} //
 	Pid        interface{} // 上级角色
 	Explain    interface{} // 角色与职责说明
+	IsSpecial  interface{} // 1: 需要特殊处理 2：不需要特殊处理
 	Remark     interface{} // 预留备注信息
 	CreateTime *gtime.Time // 新增数据时间
 	UpdateTime *gtime.Time // 最后一次更新数据时间

@@ -12,7 +12,6 @@ import (
 	"github.com/lj1570693659/gfcq_product_kpi/app/dao/internal"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model/do"
-	"github.com/lj1570693659/gfcq_product_kpi/app/model/entity"
 	"github.com/lj1570693659/gfcq_product_kpi/library/response"
 	"github.com/lj1570693659/gfcq_product_kpi/library/util"
 )
@@ -151,9 +150,9 @@ func (s *productMemberPrizeDao) GetFieldSum(ctx context.Context, in model.Produc
 	return util.DecimalLong(sum, 4), err
 }
 
-func (s *productMemberPrizeDao) GetList(ctx context.Context, in model.ProductMemberPrize, page, size int32) (res *response.GetListResponse, err error) {
+func (s *productMemberPrizeDao) GetList(ctx context.Context, in model.ProductMemberPrizeApiGetListReq) (res *response.GetListResponse, entity []model.ProductMemberPrize, err error) {
 	res = &response.GetListResponse{}
-	entity := make([]*entity.ProductMemberPrize, 0)
+	entity = make([]model.ProductMemberPrize, 0)
 	query := s.Ctx(ctx)
 	// 项目名称
 	if in.ProStageId > 0 {
@@ -171,18 +170,18 @@ func (s *productMemberPrizeDao) GetList(ctx context.Context, in model.ProductMem
 		query = query.Where(s.Columns().Id, in.Id)
 	}
 
-	query, totalSize, page, size, err := util.GetListWithPage(query, page, size)
+	query, totalSize, page, size, err := util.GetListWithPage(query, in.Page, in.Size)
 	if err != nil {
-		return res, err
+		return res, entity, err
 	}
 
-	if err = query.Scan(&entity); err != nil {
-		return res, err
+	if err = query.OrderAsc(s.Columns().IsPm).Scan(&entity); err != nil {
+		return res, entity, err
 	}
 
 	res.Page = page
 	res.Size = size
 	res.TotalSize = totalSize
 	res.Data = entity
-	return res, nil
+	return res, entity, nil
 }

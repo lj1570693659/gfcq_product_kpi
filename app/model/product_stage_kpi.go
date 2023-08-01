@@ -23,14 +23,21 @@ type ProductStageKpiWhere struct {
 
 // ProductStageKpiApiGetListReq 项目绩效清单
 type ProductStageKpiApiGetListReq struct {
-	Page            int32                `json:"page"`            // 员工姓名
-	Size            int32                `json:"size"`            // 员工姓名
-	ProductStageKpi ProductStageKpiWhere `json:"productStageKpi"` // 员工姓名
+	ProductStageKpiWhere
+	Page int32 `json:"page"` // 员工姓名
+	Size int32 `json:"size"` // 员工姓名
 }
 
 type StageInfo struct {
 	Single    *ProductStageRule
 	ModeStage *ModeStage
+}
+
+// ProductStageKpiList 项目绩效清单
+type ProductStageKpiList struct {
+	ProductStageKpi *ProductStageKpi  `json:"productStageKpi"` // 绩效详情 - 基本信息
+	ProductInfo     Product           `json:"productInfo"`     // 项目信息
+	StageInfo       *ProductStageRule `json:"stageInfo"`       // 项目阶段信息
 }
 
 type ProductInfo struct {
@@ -42,6 +49,8 @@ type ProductInfo struct {
 // ProductStageKpiInfo 项目绩效详情
 type ProductStageKpiInfo struct {
 	ProductInfo        *ProductInfo        `json:"productInfo"`        // 项目信息
+	PmInfo             *Employee           `json:"pmInfo"`             // 项目经理信息
+	PmlInfo            *Employee           `json:"pmlInfo"`            // 项目负责人信息
 	StageInfo          *StageInfo          `json:"stageInfo"`          // 项目阶段信息
 	ProductStageKpi    *ProductStageKpi    `json:"productStageKpi"`    // 绩效详情 - 基本信息
 	ProductMemberKpi   *ProductMemberKpi   `json:"productMemberKpi"`   // 绩效详情 - 团队成员绩效
@@ -66,14 +75,21 @@ type ProductStageKpiApiChangeReq struct {
 
 // ProductMemberKpiApiGetListReq 项目绩效清单
 type ProductMemberKpiApiGetListReq struct {
-	Page             int32            `json:"page"`             // 员工姓名
-	Size             int32            `json:"size"`             // 员工姓名
-	ProductMemberKpi ProductMemberKpi `json:"productMemberKpi"` // 员工姓名
+	ProductMemberKpi
+	Page int32 `json:"page"` // 员工姓名
+	Size int32 `json:"size"` // 员工姓名
 }
 
 // ProductMemberExport 团队成员信息导出
 type ProductMemberExport struct {
 	ProId uint `v:"required|integer|min:1#请选择绩效对应项目|当前项目不存在|当前项目不存在" json:"proId"` // 项目主表ID
+}
+
+type ProductMemberKpiInfo struct {
+	ProductMemberKpi *ProductMemberKpi `json:"productMemberKpi"`
+	ProductMember    *ProductMember    `json:"productMember"`
+	DepartmentName   string            `json:"departmentName"`
+	UserName         string            `json:"userName"`
 }
 
 type ProductMemberInfo struct {
@@ -85,15 +101,18 @@ type ProductMemberInfo struct {
 
 // ProductMemberKpiImportReq 团队成员绩效导入
 type ProductMemberKpiImportReq struct {
-	ID      uint `json:"id"               `                                          // 主键
-	ProId   uint `v:"required|integer|min:1#请选择绩效对应项目|当前项目不存在|当前项目不存在" json:"proId"` // 项目主表ID
-	StageId uint `v:"required|integer#请选择绩效对应项目阀点|请选择正确的项目阀点" json:"stageId"`        // 项目所处阶段（cqgf_product_stage_rule.id）
+	ID          uint                     `json:"id"               `                                          // 主键
+	ProId       uint                     `v:"required|integer|min:1#请选择绩效对应项目|当前项目不存在|当前项目不存在" json:"proId"` // 项目主表ID
+	StageId     uint                     `v:"required|integer#请选择绩效对应项目阀点|请选择正确的项目阀点" json:"stageId"`        // 项目所处阶段（cqgf_product_stage_rule.id）
+	TableData   []map[string]interface{} `v:"required#文件内容不能为空" json:"tableData"`                            // 项目成员ID
+	TableHeader []string                 `v:"required#文件标题不能为空" json:"tableHeader"`                          // 职级ID
 }
 
 // ProductMemberKpiChangeReq 团队成员绩效
 type ProductMemberKpiChangeReq struct {
 	ProductMemberKey ProductMemberKeyChangeReq `json:"productMemberKey"`
 	ID               uint                      `json:"id"               `                                                          // 主键
+	IsPm             uint                      `json:"isPm"          `                                                             // 是否是PM（1：是 2：否）
 	ProId            uint                      `v:"required|integer|min:1#请选择绩效对应项目|当前项目不存在|当前项目不存在" json:"proId"`                 // 项目主表ID
 	ProStageId       uint                      `v:"required|integer#请选择绩效对应项目阀点|请选择正确的项目阀点" json:"proStageId"`                     // 项目所处阶段（cqgf_product_stage_rule.id）
 	WorkNumber       string                    `v:"required|length:2,64#员工工号不能为空|员工工号长度应当在:2到:64之间" json:"workNumber"`             // 员工工号
@@ -121,6 +140,19 @@ type ProductMemberKeyChangeReq struct {
 	HappenTime string `json:"happenTime"`
 }
 
+// ProductMemberKeyListsReq 团队成员绩效导入
+type ProductMemberKeyListsReq struct {
+	ProductMemberKey
+	Page int32 `json:"page"` // 员工姓名
+	Size int32 `json:"size"` // 员工姓名
+}
+
+// ProductMemberKeyList 团队成员绩效导入
+type ProductMemberKeyList struct {
+	ProductMemberKey ProductMemberKey `json:"productMemberKey"`
+	ProductMemberKpi ProductMemberKpi `json:"productMemberKpi"`
+}
+
 // ----------------------------------团队成员奖金相关数据结构--------------------------------------
 
 type ProductMemberPrizeChangeReq struct {
@@ -142,7 +174,23 @@ type ProductMemberPrizeComputeReq struct {
 
 // ProductMemberPrizeApiGetListReq 项目绩效激励清单
 type ProductMemberPrizeApiGetListReq struct {
-	Page               int32              `json:"page"`               // 员工姓名
-	Size               int32              `json:"size"`               // 员工姓名
-	ProductMemberPrize ProductMemberPrize `json:"productMemberPrize"` // 员工姓名
+	ProductMemberPrize
+	Page int32 `json:"page"` // 员工姓名
+	Size int32 `json:"size"` // 员工姓名
 }
+
+// ProductMemberPrizeApiGetListRes 项目绩效激励清单
+type ProductMemberPrizeApiGetListRes struct {
+	ProductMemberPrize ProductMemberPrize `json:"productMemberPrize"` // 奖金分配
+	ProductMemberKpi   ProductMemberKpi   `json:"productMemberKpi"`
+	ProductMember      *ProductMember     `json:"productMember"`
+	DepartmentName     string             `json:"departmentName"`
+	UserName           string             `json:"userName"`
+}
+
+//type ProductMemberKpiInfo struct {
+//	ProductMemberKpi *ProductMemberKpi `json:"productMemberKpi"`
+//	ProductMember    *ProductMember    `json:"productMember"`
+//	DepartmentName   string            `json:"departmentName"`
+//	UserName         string            `json:"userName"`
+//}

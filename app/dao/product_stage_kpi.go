@@ -13,7 +13,6 @@ import (
 	"github.com/lj1570693659/gfcq_product_kpi/app/dao/internal"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model/do"
-	"github.com/lj1570693659/gfcq_product_kpi/app/model/entity"
 	"github.com/lj1570693659/gfcq_product_kpi/library/response"
 	"github.com/lj1570693659/gfcq_product_kpi/library/util"
 )
@@ -73,8 +72,8 @@ func (s *productStageKpiDao) Modify(ctx context.Context, in *model.ProductStageK
 	return in, nil
 }
 
-func (s *productStageKpiDao) GetOneByCondition(ctx context.Context, condition g.Map) (*entity.ProductStageKpi, error) {
-	info := &entity.ProductStageKpi{}
+func (s *productStageKpiDao) GetOneByCondition(ctx context.Context, condition g.Map) (*model.ProductStageKpi, error) {
+	info := &model.ProductStageKpi{}
 	err := s.Ctx(ctx).Where(condition).Scan(info)
 	return info, err
 }
@@ -103,9 +102,9 @@ func (s *productStageKpiDao) GetOne(ctx context.Context, in *model.ProductStageK
 	return res, nil
 }
 
-func (s *productStageKpiDao) GetList(ctx context.Context, in model.ProductStageKpiWhere, page, size int32) (res *response.GetListResponse, err error) {
+func (s *productStageKpiDao) GetList(ctx context.Context, in *model.ProductStageKpiApiGetListReq) (res *response.GetListResponse, productEntity []*model.ProductStageKpi, err error) {
 	res = &response.GetListResponse{}
-	productEntity := make([]*entity.ProductStageKpi, 0)
+	productEntity = make([]*model.ProductStageKpi, 0)
 	query := s.Ctx(ctx)
 	// 项目主表ID
 	if len(in.ProId) > 0 {
@@ -120,18 +119,52 @@ func (s *productStageKpiDao) GetList(ctx context.Context, in model.ProductStageK
 		query = query.WhereIn(s.Columns().PmKpiLevelId, in.PmKpiLevelId)
 	}
 
-	query, totalSize, page, size, err := util.GetListWithPage(query, page, size)
+	query, totalSize, page, size, err := util.GetListWithPage(query, in.Page, in.Size)
 	if err != nil {
-		return res, err
+		return res, productEntity, err
 	}
 
 	if err = query.Scan(&productEntity); err != nil {
-		return res, err
+		return res, productEntity, err
 	}
 
 	res.Page = page
 	res.Size = size
 	res.TotalSize = totalSize
 	res.Data = productEntity
-	return res, nil
+	return res, productEntity, nil
+}
+
+func (s *productStageKpiDao) GetAll(ctx context.Context, in *model.ProductStageKpiApiGetListReq, order model.GetDataOrder, limitNumber int) (productEntity []*model.ProductStageKpi, err error) {
+	productEntity = make([]*model.ProductStageKpi, 0)
+	query := s.Ctx(ctx)
+	// 项目主表ID
+	if len(in.ProId) > 0 {
+		query = query.WhereIn(s.Columns().ProId, in.ProId)
+	}
+	// 项目所处阶段
+	if len(in.StageId) > 0 {
+		query = query.WhereIn(s.Columns().StageId, in.StageId)
+	}
+	// PM绩效等级
+	if len(in.PmKpiLevelId) > 0 {
+		query = query.WhereIn(s.Columns().PmKpiLevelId, in.PmKpiLevelId)
+	}
+
+	if len(order.KeyName) > 0 {
+		if order.OrderDesc {
+			query = query.OrderDesc(order.KeyName)
+		} else {
+			query = query.OrderAsc(order.KeyName)
+		}
+	}
+	if limitNumber > 0 {
+		query = query.Limit(limitNumber)
+	}
+
+	if err = query.Scan(&productEntity); err != nil {
+		return productEntity, err
+	}
+
+	return productEntity, nil
 }

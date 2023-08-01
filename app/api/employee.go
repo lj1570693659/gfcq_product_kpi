@@ -12,7 +12,7 @@ var Employee = new(employeeApi)
 
 type employeeApi struct{}
 
-// SignUp @summary 判断是否已完善员工信息
+// IsSyncEmployee @summary 判断是否已完善员工信息
 // @tags    员工基础信息服务
 // @produce json
 // @param   entity  body model.UserApiSignUpReq true "注册请求"
@@ -27,7 +27,7 @@ func (a *employeeApi) IsSyncEmployee(r *ghttp.Request) {
 
 }
 
-// SignUp @summary 获取员工信息详情
+// GetOne @summary 获取员工信息详情
 // @tags    员工基础信息服务
 // @produce json
 // @param   entity  body model.EmployeeApiGetOneReq true "注册请求"
@@ -49,7 +49,7 @@ func (a *employeeApi) GetOne(r *ghttp.Request) {
 
 }
 
-// SignUp @summary 获取员工信息列表
+// GetList @summary 获取员工信息列表
 // @tags    员工基础信息服务
 // @produce json
 // @param   entity  body model.EmployeeApiGetListReq true "注册请求"
@@ -71,7 +71,29 @@ func (a *employeeApi) GetList(r *ghttp.Request) {
 
 }
 
-// SignUp @summary 完善员工信息
+// GetAll @summary 获取员工信息列表
+// @tags    员工基础信息服务
+// @produce json
+// @param   entity  body model.Employee true "注册请求"
+// @router  /system/organize/employee/lists [GET]
+// @success 200 {object} response.JsonResponse "执行结果"
+func (a *employeeApi) GetAll(r *ghttp.Request) {
+	var input *model.Employee
+
+	if err := r.Parse(&input); err != nil {
+		response.JsonExit(r, response.FormatFailEmployee, err.Error())
+	}
+
+	res, err := service.Employee.GetAll(r.Context(), input)
+	if err != nil {
+		response.JsonExit(r, response.CreateFailEmployee, err.Error())
+	} else {
+		response.JsonExit(r, response.Success, "ok", res)
+	}
+
+}
+
+// Create @summary 完善员工信息
 // @tags    员工基础信息服务
 // @produce json
 // @param   entity  body model.EmployeeApiCreateReq true "注册请求"
@@ -92,7 +114,7 @@ func (a *employeeApi) Create(r *ghttp.Request) {
 
 }
 
-// SignUp @summary 更新员工信息
+// Modify @summary 更新员工信息
 // @tags    员工基础信息服务
 // @produce json
 // @param   entity  body model.EmployeeApiModifyReq true "注册请求"

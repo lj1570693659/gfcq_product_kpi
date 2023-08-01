@@ -9,7 +9,7 @@ require (
 	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.4.4
 	github.com/gogf/gf/v2 v2.4.4
 	github.com/gogf/swagger v1.3.0
-	github.com/lj1570693659/gfcq_protoc v0.0.0-20230720030952-b7fbd76758d8
+	github.com/lj1570693659/gfcq_protoc v0.0.0-20230731090821-2ec86e09baea
 	github.com/xuri/excelize/v2 v2.7.1
 )
 

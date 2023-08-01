@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/lj1570693659/gfcq_product_kpi/app/dao"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
@@ -42,20 +43,21 @@ func (s *userService) IsSignedIn(ctx context.Context) bool {
 }
 
 // SignIn 用户登录，成功返回用户信息，否则返回nil; WorkNumber应当会md5值字符串
-func (s *userService) SignIn(ctx context.Context, WorkNumber, password string) error {
+func (s *userService) SignIn(ctx context.Context, WorkNumber, password string) (model.Employee, error) {
 	var user *entity.User
+	userInfo := model.Employee{}
 	err := dao.User.Ctx(ctx).Where(dao.User.Columns().WorkNumber, WorkNumber).Where(dao.User.Columns().Password, util.Encrypt(password)).Scan(&user)
 	if err != nil {
-		return err
+		return userInfo, err
 	}
 	if user == nil {
-		return errors.New("账号或密码错误")
+		return userInfo, errors.New("账号或密码错误")
 	}
 	sessionUser := &model.User{}
 	sessionUserByte, _ := json.Marshal(user)
 	json.Unmarshal(sessionUserByte, &sessionUser)
 	if err := Session.SetUser(ctx, sessionUser); err != nil {
-		return err
+		return userInfo, err
 	}
 	Context.SetUserInfo(ctx, &model.UserInfo{
 		Id:         gconv.Uint(user.Id),
@@ -65,11 +67,11 @@ func (s *userService) SignIn(ctx context.Context, WorkNumber, password string) e
 
 	employeeInfo, err := Employee.GetOne(ctx, &model.EmployeeApiGetOneReq{model.Employee{WorkNumber: user.WorkNumber}})
 	if err != nil {
-		return err
+		return userInfo, err
 	}
-	fmt.Println("employeeInfo.EmployeeInfo-----------login-------------", employeeInfo.EmployeeInfo)
+	g.Log("login").Info(ctx, employeeInfo)
 	Context.SetUserEmployee(ctx, employeeInfo.EmployeeInfo)
-	return nil
+	return employeeInfo.EmployeeInfo, nil
 }
 
 // SignOut 用户注销

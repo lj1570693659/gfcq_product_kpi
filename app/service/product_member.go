@@ -18,7 +18,7 @@ import (
 	v1 "github.com/lj1570693659/gfcq_protoc/common/v1"
 	inspirit "github.com/lj1570693659/gfcq_protoc/config/inspirit/v1"
 	productV1 "github.com/lj1570693659/gfcq_protoc/config/product/v1"
-	"mime/multipart"
+	"strings"
 )
 
 var ProductMember = productMemberService{}
@@ -37,45 +37,58 @@ type ProductMemberExcel struct {
 	JbName     string // 职级名称
 }
 
-func (s *productMemberService) Import(ctx context.Context, fileInfo multipart.File, proId uint) (*entity.Product, error) {
+func (s *productMemberService) Import(ctx context.Context, in *model.ProductMemberApiImportReq) (*entity.Product, error) {
 	res := &entity.Product{}
 	// 1: 验证项目信息
 	checkProduct, _, err := s.checkInputData(ctx, &model.ProductMemberApiChangeReq{
-		ProId: proId,
+		ProId: in.ProId,
 	})
 	if err != nil || !checkProduct {
 		return res, err
 	}
 	// 2: 读取文件内容
-	utilExcelDataFormat, err := util.ReadExcel(fileInfo)
+	saveDataFormat, err := s.makeProductMemberExcelData(in.TableHeader, in.TableData, in.ProId)
+
 	if err != nil {
 		return res, err
 	}
 	// 3: 文件内容保存
-	saveDataFormat := make([]model.ProductMemberApiChangeReq, 0)
-	for _, v := range utilExcelDataFormat {
-		input := model.ProductMemberApiChangeReq{
-			ProId:         proId,
-			WorkNumber:    gconv.String(v.B),
-			AttributeName: gconv.String(v.E),
-			PrName:        gconv.String(v.D),
-			Remark:        gconv.String(v.G),
-		}
-
-		saveDataFormat = append(saveDataFormat, input)
-	}
-
-	err = s.SaveProductMemberFromExcel(ctx, saveDataFormat, proId)
+	err = s.SaveProductMemberFromExcel(ctx, saveDataFormat)
 
 	return res, err
 }
 
 // GetList 团队成员列表
 func (s *productMemberService) GetList(ctx context.Context, in *model.ProductMemberGetListReq) (res *response.GetListResponse, err error) {
-	res, err = dao.ProductMember.GetList(ctx, in.ProductMember, in.Page, in.Size)
+	resData := make([]model.ProductMemberGetListRes, 0)
+	res, dataEntity, err := dao.ProductMember.GetList(ctx, in)
 	if err != nil {
 		return res, err
 	}
+
+	if res.TotalSize > 0 {
+		for _, v := range dataEntity {
+			info := model.ProductMemberGetListRes{}
+			info.ProductMemberInfo = v
+
+			// 姓名
+			employ, err := boot.EmployeeServer.GetOne(ctx, &v1.GetOneEmployeeReq{Id: gconv.Int32(v.EmpId)})
+			if err != nil {
+				return res, err
+			}
+			info.EmployeeInfo = employ.GetEmployee()
+			// 职级
+			jobLevel, err := boot.JobLevelServer.GetOne(ctx, &v1.GetOneJobLevelReq{Id: gconv.Int32(employ.GetEmployee().GetJobLevel())})
+			if err != nil {
+				return res, err
+			}
+			info.JobLevelInfo = jobLevel.GetJobLevel()
+
+			resData = append(resData, info)
+		}
+	}
+
+	res.Data = resData
 	return res, nil
 }
 
@@ -88,7 +101,7 @@ func (s *productMemberService) GetAll(ctx context.Context, in *model.ProductMemb
 	return res, nil
 }
 
-func (s *productMemberService) GetOne(ctx context.Context, in *model.ProductMemberApiGetOneReq) (res *entity.ProductMember, err error) {
+func (s *productMemberService) GetOne(ctx context.Context, in *model.ProductMemberApiGetOneReq) (res *model.ProductMember, err error) {
 	res, err = dao.ProductMember.GetOne(ctx, in.ProductMember)
 	if err != nil {
 		return res, err
@@ -105,19 +118,23 @@ func (s *productMemberService) GetMemberInfo(ctx context.Context, in *model.Prod
 	if err != nil {
 		return info, err
 	}
-	info.Employee = model.Employee{UserName: employ.GetEmployee().UserName}
+	info.Employee = model.Employee{
+		UserName: employ.GetEmployee().UserName,
+		DepartId: employ.GetEmployee().DepartId,
+		JobLevel: gconv.Uint(employ.GetEmployee().JobLevel),
+	}
 
 	return info, err
 }
 
-func (s *productMemberService) Create(ctx context.Context, in *model.ProductMemberApiChangeReq) (*entity.ProductMember, error) {
-	res := &entity.ProductMember{}
+func (s *productMemberService) Create(ctx context.Context, in *model.ProductMemberApiChangeReq) (*model.ProductMember, error) {
+	res := &model.ProductMember{}
 	checkInput, in, err := s.checkInputData(ctx, in)
 	if err != nil || !checkInput {
 		return res, err
 	}
 
-	data := &entity.ProductMember{}
+	data := &model.ProductMember{}
 	input, _ := json.Marshal(in)
 	err = json.Unmarshal(input, &data)
 	if err != nil {
@@ -128,8 +145,8 @@ func (s *productMemberService) Create(ctx context.Context, in *model.ProductMemb
 	return res, err
 }
 
-func (s *productMemberService) Modify(ctx context.Context, in *model.ProductMemberApiChangeReq) (*entity.ProductMember, error) {
-	res := &entity.ProductMember{}
+func (s *productMemberService) Modify(ctx context.Context, in *model.ProductMemberApiChangeReq) (*model.ProductMember, error) {
+	res := &model.ProductMember{}
 	if g.IsEmpty(in.Id) {
 		return res, errors.New("缺少编辑对象")
 	}
@@ -139,7 +156,7 @@ func (s *productMemberService) Modify(ctx context.Context, in *model.ProductMemb
 		return res, err
 	}
 
-	data := &entity.ProductMember{}
+	data := &model.ProductMember{}
 	input, _ := json.Marshal(in)
 	err = json.Unmarshal(input, &data)
 	if err != nil {
@@ -211,6 +228,7 @@ func (s *productMemberService) checkInputData(ctx context.Context, in *model.Pro
 			return false, in, errors.New(fmt.Sprintf("项目角色：%s 信息未录入，请先录入", in.PrName))
 		}
 		in.PrId = gconv.Uint(roles.GetRoles().GetId())
+		in.IsSpecial = gconv.Uint(roles.GetRoles().GetIsSpecial())
 		// 管理指数
 		in.ManageIndex, err = s.GetManageIndexByJobLevel(ctx, roles.GetRoles().GetId(), roles.GetRoles().GetPid())
 		if err != nil {
@@ -221,7 +239,7 @@ func (s *productMemberService) checkInputData(ctx context.Context, in *model.Pro
 	return true, in, err
 }
 
-func (s *productMemberService) SaveProductMemberFromExcel(ctx context.Context, excelData []model.ProductMemberApiChangeReq, proId uint) (err error) {
+func (s *productMemberService) SaveProductMemberFromExcel(ctx context.Context, excelData []*model.ProductMemberApiChangeReq) (err error) {
 	if len(excelData) == 0 {
 		return errors.New("文件内容为空，请先完善信息")
 	}
@@ -230,24 +248,18 @@ func (s *productMemberService) SaveProductMemberFromExcel(ctx context.Context, e
 		// 查询项目优先级确认配置信息
 		for _, v := range excelData {
 			proMem, err := dao.ProductMember.GetOne(ctx, model.ProductMember{
-				ProId:      proId,
+				ProId:      v.ProId,
 				WorkNumber: v.WorkNumber,
 			})
 			if err != nil && err != sql.ErrNoRows {
 				return err
 			}
 
-			checkData, in, err := s.checkInputData(ctx, &model.ProductMemberApiChangeReq{
-				ProId:         proId,
-				WorkNumber:    v.WorkNumber,
-				AttributeName: v.AttributeName,
-				Remark:        v.Remark,
-				PrName:        v.PrName,
-			})
+			checkData, in, err := s.checkInputData(ctx, v)
 			if err != nil || !checkData {
 				return err
 			}
-			model := &entity.ProductMember{}
+			model := &model.ProductMember{}
 			gconv.Struct(in, model)
 			model.Id = proMem.Id
 			if g.IsEmpty(proMem.Id) {
@@ -345,4 +357,45 @@ func (s *productMemberService) GetManageIndexByJobLevel(ctx context.Context, id,
 		return gconv.Uint(manageInfo.GetCrewManageIndex().GetScoreIndex()), nil
 	}
 	return 0, nil
+}
+
+func (s *productMemberService) makeProductMemberExcelData(tableHeader []string, tableData []map[string]interface{}, proId uint) ([]*model.ProductMemberApiChangeReq, error) {
+	data := make([]*model.ProductMemberApiChangeReq, 0)
+	if len(tableData) == 0 {
+		return data, errors.New("表格数据为空，请先完善数据")
+	}
+
+	for _, v := range tableData {
+		info := &model.ProductMemberApiChangeReq{ProId: proId}
+		for vk, vv := range v {
+			switch vk {
+			case "项目角色":
+				info.PrName = gconv.String(vv)
+			case "工号":
+				info.WorkNumber = gconv.String(vv)
+			case "分类":
+				info.Type = gconv.String(vv)
+			case "投入占比":
+				vvs := gconv.String(vv)
+				if strings.Contains(vvs, "%") {
+					putInto := strings.Split(vvs, "%")
+					info.PutInto = util.Decimal(gconv.Float64(putInto[0]) / 100)
+				} else {
+					info.PutInto = util.Decimal(gconv.Float64(vvs))
+				}
+			case "责任和职务":
+				info.SpecificDuty = gconv.String(vv)
+			case "工作地":
+				info.WorkAddress = gconv.String(vv)
+			case "主导方":
+				info.IsGuide = gconv.Uint(gconv.Bool(vv))
+			case "支持方":
+				info.IsSupport = gconv.Uint(gconv.Bool(vv))
+			case "备注":
+				info.Remark = gconv.String(vv)
+			}
+		}
+		data = append(data, info)
+	}
+	return data, nil
 }

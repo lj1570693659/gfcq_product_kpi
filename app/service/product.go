@@ -15,6 +15,7 @@ import (
 	"github.com/lj1570693659/gfcq_product_kpi/boot"
 	"github.com/lj1570693659/gfcq_product_kpi/consts"
 	"github.com/lj1570693659/gfcq_product_kpi/library/response"
+	common "github.com/lj1570693659/gfcq_protoc/common/v1"
 	inspirit "github.com/lj1570693659/gfcq_protoc/config/inspirit/v1"
 	product "github.com/lj1570693659/gfcq_protoc/config/product/v1"
 )
@@ -25,17 +26,132 @@ type productService struct{}
 
 // GetList 项目清单
 func (s *productService) GetList(ctx context.Context, in *model.ProductApiGetListReq) (res *response.GetListResponse, err error) {
-	res, err = dao.Product.GetList(ctx, in.Product, in.Page, in.Size)
+	res = &response.GetListResponse{}
+	resData := make([]model.GetProduct, 0)
+	productList, productEntity, err := dao.Product.GetList(ctx, in.Product, in.Page, in.Size)
 	if err != nil {
 		return res, err
 	}
+
+	modeList, err := boot.ModeServer.GetAll(ctx, &product.GetAllModeReq{})
+	if err != nil {
+		return res, err
+	}
+
+	if productList.TotalSize > 0 {
+		for _, v := range productEntity {
+			info := model.GetProduct{
+				ProductInfo: v,
+				ProductPm:   model.Employee{},
+				ProductPml:  model.Employee{},
+			}
+			// 研发模式
+			info.ProductMode, err = s.getModeInfo(gconv.Int32(v.ModeId), modeList.GetData())
+			if err != nil {
+				return res, err
+			}
+			// 项目所处阶段
+			info.ProductStage, err = s.getStageInfo(ctx, v.ProTypeStageId)
+			if err != nil {
+				return res, err
+			}
+			//项目经理
+			if v.PmId > 0 {
+				pmInfo, err := boot.EmployeeServer.GetOne(ctx, &common.GetOneEmployeeReq{Id: gconv.Int32(v.PmId)})
+
+				if err != nil {
+					return res, err
+				}
+				gconv.Struct(pmInfo.GetEmployee(), &info.ProductPm)
+			}
+
+			//项目负责人
+			if v.PmlId > 0 {
+				pmlInfo, err := boot.EmployeeServer.GetOne(ctx, &common.GetOneEmployeeReq{Id: gconv.Int32(v.PmlId)})
+				if err != nil {
+					return res, err
+				}
+				gconv.Struct(pmlInfo.GetEmployee(), &info.ProductPml)
+			}
+
+			resData = append(resData, info)
+		}
+	}
+
+	res.Size = productList.Size
+	res.Page = productList.Page
+	res.TotalSize = productList.TotalSize
+	res.Data = resData
 	return res, nil
 }
 
-func (s *productService) GetOne(ctx context.Context, in *model.ProductApiGetOneReq) (res *entity.Product, err error) {
+func (s *productService) GetOne(ctx context.Context, in *model.ProductApiGetOneReq) (res model.Product, err error) {
 	res, err = dao.Product.GetOne(ctx, in.Product)
 	if err != nil {
 		return res, err
+	}
+
+	// 项目所处阶段
+	stageInfo, err := dao.ProductStageRule.GetOne(ctx, &model.ProductStageRule{Id: res.ProTypeStageId})
+	if err != nil {
+		return res, err
+	}
+	res.ProTypeStageId = stageInfo.ProStageId
+	return res, nil
+}
+
+// GetDetail 项目详情
+func (s *productService) GetDetail(ctx context.Context, in *model.ProductApiGetOneReq) (res model.GetProduct, err error) {
+	res = model.GetProduct{
+		ProductPm:  model.Employee{},
+		ProductPml: model.Employee{},
+	}
+	res.ProductInfo, err = dao.Product.GetOne(ctx, in.Product)
+	if err != nil {
+		return res, err
+	}
+
+	// 研发模式
+	modeInfo, err := boot.ModeServer.GetOne(ctx, &product.GetOneModeReq{Mode: &product.ModeInfo{Id: gconv.Int32(res.ProductInfo.ModeId)}})
+	if err != nil {
+		return res, err
+	}
+	res.ProductMode = model.Mode{Name: modeInfo.GetMode().GetName()}
+
+	// 项目类型
+	typeInfo, err := boot.TypeServer.GetOne(ctx, &product.GetOneTypeReq{Type: &product.TypeInfo{Id: gconv.Int32(res.ProductInfo.Tid)}})
+	if err != nil {
+		return res, err
+	}
+	res.ProductType = model.ProductType{
+		Name: typeInfo.GetType().GetName(),
+	}
+	//项目经理
+	if res.ProductInfo.PmId > 0 {
+		pmInfo, err := boot.EmployeeServer.GetOne(ctx, &common.GetOneEmployeeReq{Id: gconv.Int32(res.ProductInfo.PmId)})
+
+		if err != nil {
+			return res, err
+		}
+		gconv.Struct(pmInfo.GetEmployee(), &res.ProductPm)
+	}
+	//项目负责人
+	if res.ProductInfo.PmlId > 0 {
+		pmlInfo, err := boot.EmployeeServer.GetOne(ctx, &common.GetOneEmployeeReq{Id: gconv.Int32(res.ProductInfo.PmlId)})
+		if err != nil {
+			return res, err
+		}
+		gconv.Struct(pmlInfo.GetEmployee(), &res.ProductPml)
+	}
+
+	// 项目所处阶段
+	stageInfo, err := dao.ProductStageRule.GetOne(ctx, &model.ProductStageRule{Id: res.ProductInfo.ProTypeStageId})
+	if err != nil {
+		return res, err
+	}
+	res.ProductStage = &model.ModeStage{
+		Name:       stageInfo.Name,
+		QuotaRadio: stageInfo.QuotaRadio,
 	}
 	return res, nil
 }
@@ -47,19 +163,28 @@ func (s *productService) Create(ctx context.Context, in *model.ProductApiChangeR
 		return res, err
 	}
 
-	data := &entity.Product{}
-	input, _ := json.Marshal(in)
-	err = json.Unmarshal(input, &data)
-	if err != nil {
-		return res, err
-	}
-	err = dao.Product.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
-		res, err = dao.Product.Create(ctx, data)
-
-		// 项目阶段占比个性化配置
-		err = ProductStageRule.CreateDefault(ctx, in.Tid, res.Id)
-		return err
-	})
+	//data := &entity.Product{}
+	//input, _ := json.Marshal(in)
+	//err = json.Unmarshal(input, &data)
+	//if err != nil {
+	//	return res, err
+	//}
+	//err = dao.Product.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+	//	res, err = dao.Product.Create(ctx, data)
+	//
+	//	// 项目阶段占比个性化配置
+	//	err = ProductStageRule.CreateDefault(ctx, in.Tid, res.Id)
+	//
+	//	// 查询项目当前自由阶段
+	//	stageInfo, err := dao.ProductStageRule.GetOne(ctx, &model.ProductStageRule{ProId: res.Id, ProStageId: in.ProTypeStageId})
+	//	if err != nil {
+	//		return err
+	//	}
+	//	// 更新项目个性化阶段定制信息
+	//	data.ProTypeStageId = stageInfo.Id
+	//	_, err = dao.Product.Modify(ctx, data)
+	//	return err
+	//})
 
 	return res, err
 }
@@ -82,7 +207,51 @@ func (s *productService) Modify(ctx context.Context, in *model.ProductApiChangeR
 		return res, err
 	}
 
+	// 查询项目当前自由阶段
+	stageInfo, err := dao.ProductStageRule.GetOne(ctx, &model.ProductStageRule{ProId: in.Id, ProStageId: in.ProTypeStageId})
+	if err != nil {
+		return res, err
+	}
+	// 更新项目个性化阶段定制信息
+	data.ProTypeStageId = stageInfo.Id
+
 	res, err = dao.Product.Modify(ctx, data)
+	return res, err
+}
+
+func (s *productService) Delete(ctx context.Context, in *model.Product) (model.Product, error) {
+	res := model.Product{}
+	if g.IsEmpty(in.Id) {
+		return res, errors.New("缺少删除对象")
+	}
+
+	res, err := dao.Product.GetOne(ctx, model.Product{Id: in.Id})
+	if err != nil {
+		return res, err
+	}
+
+	productMember, err := dao.ProductMember.GetOne(ctx, model.ProductMember{ProId: in.Id})
+	if err != nil && err.Error() != sql.ErrNoRows.Error() {
+		return res, err
+	}
+	if !g.IsEmpty(productMember.Id) {
+		return res, errors.New("请先移除项目组成员信息")
+	}
+
+	err = dao.Product.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+		_, err := dao.Product.Delete(ctx, in.Id)
+		if err != nil {
+			return err
+		}
+
+		// 查询项目阶段信息
+		_, err = dao.ProductStageRule.Delete(ctx, in.Id, 0)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
 	return res, err
 }
 
@@ -232,6 +401,7 @@ func (s *productService) getIncentiveBudgetByLcScore(ctx context.Context, lcScor
 	}
 
 	// 预算修正
+	incentiveBudget = budgetMin
 	if !g.IsEmpty(fixBudget) {
 		switch fixType {
 		case consts.BudgetFixAdd:
@@ -242,4 +412,28 @@ func (s *productService) getIncentiveBudgetByLcScore(ctx context.Context, lcScor
 	}
 
 	return incentiveBudget, nil
+}
+
+func (s *productService) getModeInfo(modeId int32, modeList []*product.ModeInfo) (res model.Mode, err error) {
+	if len(modeList) == 0 {
+		return
+	}
+	for _, v := range modeList {
+		if modeId == v.Id {
+			gconv.Structs(v, &res)
+			return
+		}
+	}
+	return
+}
+
+func (s *productService) getStageInfo(ctx context.Context, proTypeStageId uint) (res *model.ModeStage, err error) {
+	res = &model.ModeStage{}
+	if proTypeStageId == 0 {
+		return
+	}
+	stageInfo, err := dao.ProductStageRule.GetOne(ctx, &model.ProductStageRule{Id: proTypeStageId})
+	res.Name = stageInfo.Name
+	res.QuotaRadio = stageInfo.QuotaRadio
+	return res, err
 }

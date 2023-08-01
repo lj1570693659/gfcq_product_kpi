@@ -8,6 +8,7 @@ import (
 	"github.com/lj1570693659/gfcq_product_kpi/boot"
 	"github.com/lj1570693659/gfcq_product_kpi/library/util"
 	v1 "github.com/lj1570693659/gfcq_protoc/common/v1"
+	"strings"
 )
 
 // Department 部门信息管理服务
@@ -90,9 +91,34 @@ func (s *departmentService) Modify(ctx context.Context, input *model.DepartmentA
 
 // Delete 删除部门信息
 func (s *departmentService) Delete(ctx context.Context, input *model.DepartmentApiDeleteReq) error {
+
 	_, err := boot.DepertmentServer.Delete(ctx, &v1.DeleteDepartmentReq{
 		Id: gconv.Int32(input.ID),
 	})
 
 	return err
+}
+
+func (s *departmentService) GetDepartmentName(departId string, departmentList []*v1.DepartmentInfo) string {
+	departmentNames := make([]string, 0)
+	if len(departmentList) == 0 {
+		return ""
+	}
+
+	departIds := strings.Split(departId, ",")
+	departIds = util.DeleteIntSlice(departIds)
+	if len(departIds) > 0 {
+		for _, dv := range strings.Split(departId, ",") {
+			for _, v := range departmentList {
+				if gconv.Int32(dv) == v.Id {
+					departmentNames = append(departmentNames, v.GetName())
+				}
+			}
+		}
+	}
+
+	if len(departmentNames) == 0 {
+		return ""
+	}
+	return strings.Join(departmentNames, ",")
 }

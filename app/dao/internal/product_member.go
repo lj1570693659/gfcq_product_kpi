@@ -20,38 +20,52 @@ type ProductMemberDao struct {
 
 // ProductMemberColumns defines and stores column names for table cqgf_product_member.
 type ProductMemberColumns struct {
-	Id          string //
-	ProId       string // 项目ID
-	EmpId       string // 项目成员ID
-	WorkNumber  string // 员工工号
-	Attribute   string // 属性（1：全职，2：兼职）
-	PrId        string // 项目角色ID
-	PrName      string // 项目角色名称
-	ManageIndex string // 管理指数
-	JbId        string // 职级ID
-	JbName      string // 职级名称
-	DutyIndex   string // 责任指数
-	Remark      string // 预留备注说明信息
-	CreateTime  string // 新增数据时间
-	UpdateTime  string // 最后一次更新数据时间
+	Id           string //
+	ProId        string // 项目ID
+	EmpId        string // 项目成员ID
+	IsSpecial    string // 1: 需要特殊处理 2：不需要特殊处理
+	WorkNumber   string // 员工工号
+	Attribute    string // 属性（1：全职，2：兼职）
+	PrId         string // 项目角色ID
+	PrName       string // 项目角色名称
+	ManageIndex  string // 管理指数
+	JbId         string // 职级ID
+	JbName       string // 职级名称
+	DutyIndex    string // 责任指数
+	WorkAddress  string // 工作地点
+	SpecificDuty string // 具体职责和职务
+	Type         string // 项目组内部分类使用
+	PutInto      string // 投入占比
+	IsGuide      string // 是否是主导方（1：是）
+	IsSupport    string // 是否是支持方（1：是）
+	Remark       string // 预留备注说明信息
+	CreateTime   string // 新增数据时间
+	UpdateTime   string // 最后一次更新数据时间
 }
 
 // productMemberColumns holds the columns for table cqgf_product_member.
 var productMemberColumns = ProductMemberColumns{
-	Id:          "id",
-	ProId:       "pro_id",
-	EmpId:       "emp_id",
-	WorkNumber:  "work_number",
-	Attribute:   "attribute",
-	PrId:        "pr_id",
-	PrName:      "pr_name",
-	ManageIndex: "manage_index",
-	JbId:        "jb_id",
-	JbName:      "jb_name",
-	DutyIndex:   "duty_index",
-	Remark:      "remark",
-	CreateTime:  "create_time",
-	UpdateTime:  "update_time",
+	Id:           "id",
+	ProId:        "pro_id",
+	EmpId:        "emp_id",
+	IsSpecial:    "is_special",
+	WorkNumber:   "work_number",
+	Attribute:    "attribute",
+	PrId:         "pr_id",
+	PrName:       "pr_name",
+	ManageIndex:  "manage_index",
+	JbId:         "jb_id",
+	JbName:       "jb_name",
+	DutyIndex:    "duty_index",
+	WorkAddress:  "work_address",
+	SpecificDuty: "specific_duty",
+	Type:         "type",
+	PutInto:      "put_into",
+	IsGuide:      "is_guide",
+	IsSupport:    "is_support",
+	Remark:       "remark",
+	CreateTime:   "create_time",
+	UpdateTime:   "update_time",
 }
 
 // NewProductMemberDao creates and returns a new DAO object for table data access.

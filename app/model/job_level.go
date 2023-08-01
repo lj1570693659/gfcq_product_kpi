@@ -5,6 +5,7 @@ import (
 )
 
 type JobLevel entity.JobLevel
+type Job entity.Job
 
 // JobLevelApiChangeReq 职级信息变更
 type JobLevelApiChangeReq struct {

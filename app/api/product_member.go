@@ -2,8 +2,6 @@ package api
 
 import (
 	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/app/service"
 	"github.com/lj1570693659/gfcq_product_kpi/library/response"
@@ -103,21 +101,16 @@ func (a *productMemberApi) Modify(r *ghttp.Request) {
 // Import @summary 导入团队成员信息
 // @tags    项目团队管理
 // @produce json
-// @param   entity  body model.ProductApiChangeReq true "注册请求"
+// @param   entity  body model.ProductMemberApiImportReq true "注册请求"
 // @router  /product/member/import [POST]
 // @success 200 {object} response.JsonResponse "执行结果"
 func (a *productMemberApi) Import(r *ghttp.Request) {
-	file, _, err := r.Request.FormFile("product_member_list")
-	if err != nil {
-		response.JsonExit(r, response.ImportFileFail, err.Error())
+	var input *model.ProductMemberApiImportReq
+	if err := r.Parse(&input); err != nil {
+		response.JsonExit(r, response.FormatFailProductMember, err.Error())
 	}
 
-	proId := r.GetRequest("proId")
-	if g.IsEmpty(proId) {
-		response.JsonExit(r, response.FormatFailProductMember, "请选择需要查看的项目信息")
-	}
-
-	if out, err := service.ProductMember.Import(r.Context(), file, gconv.Uint(proId)); err != nil {
+	if out, err := service.ProductMember.Import(r.Context(), input); err != nil {
 		response.JsonExit(r, response.FormatFailProductMember, err.Error(), out)
 	} else {
 		response.JsonExit(r, response.Success, "ok", out)

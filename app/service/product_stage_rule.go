@@ -14,7 +14,7 @@ var ProductStageRule = productStageRuleService{}
 
 type productStageRuleService struct{}
 
-// GetOne 项目绩效详情
+// GetOne 项目个性化阶段详情
 func (s *productStageRuleService) GetOne(ctx context.Context, in *model.ProductStageRule) (res *model.StageInfo, err error) {
 	res = &model.StageInfo{
 		Single:    &model.ProductStageRule{},
@@ -32,6 +32,12 @@ func (s *productStageRuleService) GetOne(ctx context.Context, in *model.ProductS
 
 	gconv.Struct(stageInfo.GetModeStage(), &res.ModeStage)
 	return res, nil
+}
+
+// GetList 项目个性化阶段列表
+func (s *productStageRuleService) GetList(ctx context.Context, in *model.ProductStageRule) (res []*model.ProductStageRule, err error) {
+	res, err = dao.ProductStageRule.GetAll(ctx, in)
+	return res, err
 }
 
 // CreateDefault 创建默认数据

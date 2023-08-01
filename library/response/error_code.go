@@ -70,6 +70,12 @@ const (
 	ModifyFailProductMemberPrize  = 6124
 	GetListFailProductMemberPrize = 6125
 	GetOneFailProductMemberPrize  = 6126
+	// FormatFailProductMemberKey 项目成员关键事件
+	FormatFailProductMemberKey  = 6132
+	CreateFailProductMemberKey  = 6133
+	ModifyFailProductMemberKey  = 6134
+	GetListFailProductMemberKey = 6135
+	GetOneFailProductMemberKey  = 6136
 
 	// FormatFailLevelAssess 配置信息
 	FormatFailLevelAssess = 1002

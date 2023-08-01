@@ -6,6 +6,13 @@ const (
 	// PartTime 兼职
 	PartTime = 2
 
+	// SexUnknown 未知-用户未选择
+	SexUnknown = 0
+	// SexMan 男性
+	SexMan = 1
+	// SexWoMan 女性
+	SexWoMan = 2
+
 	// ScoreRangeMin 左闭右开
 	ScoreRangeMin = 1
 	// ScoreRangeMax 左开右闭
@@ -44,10 +51,24 @@ const (
 	ManageIndexRadio = "manage_index_radio"
 	// DutyIndexRadio 基准指数中责任指数占比
 	DutyIndexRadio = "duty_index_radio"
+	// StageTopNumber 首页阀点绩效TOP排名
+	StageTopNumber = "stage_top_number"
 	// IsPm 项目经理对应数据
 	IsPm = 1
 	// IsNotPm 项目组成员对应数据
 	IsNotPm = 2
+
+	// OverTimeDevote 加班贡献
+	OverTimeDevote = 1
+	// SolveProblemDevote 解决问题贡献
+	SolveProblemDevote = 2
+	// ElseDevote 其他事件贡献
+	ElseDevote = 3
+
+	// ForwardDirection 1：正向激励
+	ForwardDirection = 1
+	// ReverseDirection 2：有待提高
+	ReverseDirection = 2
 	//// IsNeedPml 需要项目负责人
 	//IsNeedPml = 1
 	//// IsNotNeedPml 不需要项目负责人

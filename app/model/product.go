@@ -1,6 +1,9 @@
 package model
 
-import "github.com/lj1570693659/gfcq_product_kpi/app/model/entity"
+import (
+	"github.com/lj1570693659/gfcq_product_kpi/app/model/entity"
+	v1 "github.com/lj1570693659/gfcq_protoc/common/v1"
+)
 
 type Product entity.Product
 type ProductMember entity.ProductMember
@@ -27,6 +30,16 @@ type ProductApiGetListReq struct {
 	Page    int32        `json:"page"`    // 员工姓名
 	Size    int32        `json:"size"`    // 员工姓名
 	Product ProductWhere `json:"product"` // 员工姓名
+}
+
+// GetProduct 项目清单中关联信息
+type GetProduct struct {
+	ProductInfo  Product     `json:"productInfo"`  // 项目信息
+	ProductMode  Mode        `json:"productMode"`  // 研发模式
+	ProductPm    Employee    `json:"productPm"`    // 项目经理
+	ProductPml   Employee    `json:"productPml"`   // 项目负责人
+	ProductType  ProductType `json:"productType"`  // 项目类型
+	ProductStage *ModeStage  `json:"productStage"` // 项目所处阶段
 }
 
 // ProductApiGetOneReq 项目详情
@@ -68,9 +81,16 @@ type ProductMemberWhere struct {
 
 // ProductMemberGetListReq 项目清单
 type ProductMemberGetListReq struct {
-	Page          int32              `json:"page"`          // 员工姓名
-	Size          int32              `json:"size"`          // 员工姓名
-	ProductMember ProductMemberWhere `json:"productMember"` // 员工姓名
+	Page int32 `json:"page"` // 员工姓名
+	Size int32 `json:"size"` // 员工姓名
+	ProductMemberWhere
+}
+
+// ProductMemberGetListRes 项目清单
+type ProductMemberGetListRes struct {
+	ProductMemberInfo ProductMember    `json:"productMemberInfo"`
+	EmployeeInfo      *v1.EmployeeInfo `json:"employeeInfo"`
+	JobLevelInfo      *v1.JobLevelInfo `json:"jobLevelInfo"`
 }
 
 // ProductMemberApiGetOneReq 项目详情
@@ -80,17 +100,38 @@ type ProductMemberApiGetOneReq struct {
 
 // ProductMemberApiChangeReq 更新项目组成员信息
 type ProductMemberApiChangeReq struct {
-	Id            uint   `json:"id"`                                                             // 员工姓名
-	ProId         uint   `v:"required#请选择项目" json:"proId"`                                       // 项目ID
-	EmpId         uint   `json:"empId"`                                                          // 项目成员ID
-	JbId          uint   `json:"jbId"`                                                           // 职级ID
-	JbName        string `json:"jbName"`                                                         // 职级名称
-	DutyIndex     uint32 `json:"dutyIndex"   `                                                   // 责任指数
-	WorkNumber    string `v:"required|length:2,64#员工工号不能为空|员工工号长度应当在:2到:64之间" json:"workNumber"` // 员工工号
-	Attribute     uint   `json:"attribute"`                                                      // 属性（1：全职，2：兼职）
-	AttributeName string `v:"required|in:兼职,全职#投入属性值不能为空|请选择正确的投入属性值" json:"attributeName"`      // 属性（1：全职，2：兼职）
-	PrId          uint   `json:"prId"`                                                           // 项目角色ID
-	PrName        string `v:"required#请输入项目角色" json:"prName"`                                    // 项目角色名称
-	ManageIndex   uint   `json:"manageIndex" `                                                   // 管理指数
-	Remark        string `json:"remark"`                                                         // 预留备注信息
+	Id            uint    `json:"id"`                                                             // 员工姓名
+	ProId         uint    `v:"required#请选择项目" json:"proId"`                                       // 项目ID
+	EmpId         uint    `json:"empId"`                                                          // 项目成员ID
+	IsSpecial     uint    `json:"isSpecial"    `                                                  // 1: 需要特殊处理 2：不需要特殊处理
+	JbId          uint    `json:"jbId"`                                                           // 职级ID
+	JbName        string  `json:"jbName"`                                                         // 职级名称
+	DutyIndex     uint32  `json:"dutyIndex"   `                                                   // 责任指数
+	WorkNumber    string  `v:"required|length:2,64#员工工号不能为空|员工工号长度应当在:2到:64之间" json:"workNumber"` // 员工工号
+	Attribute     uint    `json:"attribute"`                                                      // 属性（1：全职，2：兼职）
+	AttributeName string  `v:"required|in:兼职,全职#投入属性值不能为空|请选择正确的投入属性值" json:"attributeName"`      // 属性（1：全职，2：兼职）
+	PrId          uint    `json:"prId"`                                                           // 项目角色ID
+	PrName        string  `v:"required#请输入项目角色" json:"prName"`                                    // 项目角色名称
+	ManageIndex   uint    `json:"manageIndex" `                                                   // 管理指数
+	WorkAddress   string  `json:"workAddress"  `                                                  // 工作地点
+	SpecificDuty  string  `json:"specificDuty" `                                                  // 具体职责和职务
+	Type          string  `json:"type"         `                                                  // 项目组内部分类使用
+	PutInto       float64 `json:"putInto"      `                                                  // 投入占比
+	IsGuide       uint    `json:"isGuide"      `                                                  // 是否是主导方（1：是）
+	IsSupport     uint    `json:"isSupport"    `                                                  // 是否是支持方（1：是）
+	Remark        string  `json:"remark"`                                                         // 预留备注信息
+}
+
+// ProductMemberApiImportReq 更新项目组成员信息
+type ProductMemberApiImportReq struct {
+	ProId       uint                     `v:"required#请选择项目" json:"proId"`          // 项目ID
+	TableData   []map[string]interface{} `v:"required#文件内容不能为空" json:"tableData"`   // 项目成员ID
+	TableHeader []string                 `v:"required#文件标题不能为空" json:"tableHeader"` // 职级ID
+}
+
+// GetDataOrder 项目绩效清单
+type GetDataOrder struct {
+	KeyName   string `json:"keyName"`   // 排序字段名称
+	OrderDesc bool   `json:"orderDesc"` // 排序方式
+	OrderAsc  bool   `json:"orderAsc"`  // 排序方式
 }

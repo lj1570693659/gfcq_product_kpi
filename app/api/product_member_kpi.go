@@ -27,7 +27,7 @@ func (a *productMemberKpiApi) Export(r *ghttp.Request) {
 	}
 
 	filepath, err := service.ProductMemberKpi.Export(r.Context(), input)
-	//r.Response.ServeFileDownload(filepath)
+
 	if err != nil {
 		response.JsonExit(r, response.CreateFailProductStageKpi, err.Error())
 	} else {
@@ -42,17 +42,12 @@ func (a *productMemberKpiApi) Export(r *ghttp.Request) {
 // @router  /achieve/product/member/import [POST]
 // @success 200 {object} response.JsonResponse "团队绩效"
 func (a *productMemberKpiApi) Import(r *ghttp.Request) {
-	file, _, err := r.Request.FormFile("product_member_kpi_file")
-	if err != nil {
-		response.JsonExit(r, response.ImportFileFail, err.Error())
-	}
-
 	var input *model.ProductMemberKpiImportReq
 	if err := r.Parse(&input); err != nil {
 		response.JsonExit(r, response.FormatFailProductMemberKpi, err.Error())
 	}
 
-	err = service.ProductMemberKpi.Import(r.Context(), file, input)
+	err := service.ProductMemberKpi.Import(r.Context(), input)
 	if err != nil {
 		response.JsonExit(r, response.CreateFailProductMemberKpi, err.Error())
 	} else {

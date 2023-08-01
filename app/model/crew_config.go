@@ -19,6 +19,12 @@ type CrewManageIndexApiChangeReq struct {
 	Remark        string `json:"remark"`                                            // 预留备注说明信息
 }
 
+// CrewManageIndexApiAll 管理指数预算信息变更
+type CrewManageIndexApiAll struct {
+	CrewManageInfo  CrewManageIndex `json:"crewManageInfo"`
+	ProductRoleName string          `json:"productRoleName"`
+}
+
 // CrewManageIndexApiDeleteReq 删除管理指数预算信息
 type CrewManageIndexApiDeleteReq struct {
 	ID string `v:"required|integer#删除数据源不能为空|删除数据源错误" json:"id"` // 主键
@@ -46,6 +52,12 @@ type CrewDutyIndexApiChangeReq struct {
 	JobLevelId uint   `v:"required|min:0#职级不能为空|请选择对应职级" json:"jobLevelId"`       // 职级ID
 	Arith      uint   `v:"required|in:1,2,3,4,5,6#运算方式不能为空|请选择运算方式" json:"arith"` // 运算方式
 	Remark     string `json:"remark"`                                             // 预留备注说明信息
+}
+
+// CrewDutyIndexApiAll 责任指数预算信息变更
+type CrewDutyIndexApiAll struct {
+	CrewDutyInfo CrewDutyIndex `json:"crewDutyInfo"`
+	JobLevelName string        `json:"jobLevelName"`
 }
 
 // CrewDutyIndexApiDeleteReq 删除责任指数预算信息

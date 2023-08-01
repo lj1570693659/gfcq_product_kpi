@@ -34,9 +34,10 @@ func init() {
 					sgoe.POST("/create", api.Employee.Create)
 
 					sgoe.Middleware(service.Middleware.Role, service.Middleware.BusinessRole)
-					sgoe.POST("/modify", api.Employee.Modify)
+					sgoe.PUT("/modify", api.Employee.Modify)
 					sgoe.GET("/info", api.Employee.GetOne)
 					sgoe.GET("/lists", api.Employee.GetList)
+					sgoe.GET("/all", api.Employee.GetAll)
 				})
 				// 部门信息
 				sgo.Group("/department", func(dgo *ghttp.RouterGroup) {
@@ -50,9 +51,19 @@ func init() {
 				sgo.Group("/level", func(lgo *ghttp.RouterGroup) {
 					lgo.GET("/lists", api.JobLevel.GetList)
 					lgo.GET("/info", api.JobLevel.GetOne)
+					lgo.GET("/all", api.JobLevel.GetAll)
 					lgo.POST("/create", api.JobLevel.Create)
 					lgo.PUT("/modify", api.JobLevel.Modify)
 					lgo.DELETE("/delete", api.JobLevel.Delete)
+				})
+				// 岗位信息
+				sgo.Group("/job", func(jgo *ghttp.RouterGroup) {
+					//jgo.GET("/lists", api.JobLevel.GetList)
+					//jgo.GET("/info", api.JobLevel.GetOne)
+					jgo.GET("/all", api.Job.GetAll)
+					//jgo.POST("/create", api.JobLevel.Create)
+					//jgo.PUT("/modify", api.JobLevel.Modify)
+					//jgo.DELETE("/delete", api.JobLevel.Delete)
 				})
 			})
 		})
@@ -62,7 +73,7 @@ func init() {
 			// 项目配置
 			cg.Group("/product", func(cgp *ghttp.RouterGroup) {
 				// 评级、优先级、研发模式、项目类型、阶段、项目角色
-				// 项目等级评
+				// 项目评级标准
 				cgp.Group("/assess", func(agp *ghttp.RouterGroup) {
 					agp.GET("/lists", api.LevelAssess.GetList)
 					agp.GET("/info", api.LevelAssess.GetOne)
@@ -90,7 +101,7 @@ func init() {
 				})
 				// 项目阶段
 				cgp.Group("/stage", func(stgp *ghttp.RouterGroup) {
-					stgp.GET("/all", api.Type.GetStageAll)
+					stgp.GET("/all/{tid}", api.Type.GetStageAll)
 					stgp.POST("/create", api.Type.CreateModeStage)
 					stgp.PUT("/modify", api.Type.ModifyModeStage)
 					stgp.DELETE("/delete", api.Type.DeleteModeStage)
@@ -156,6 +167,13 @@ func init() {
 					ogp.PUT("/modify", api.CrewOvertimeRule.Modify)
 					ogp.DELETE("/delete", api.CrewOvertimeRule.Delete)
 				})
+				// 绩效等级
+				cgi.Group("/kpiRule", func(kgp *ghttp.RouterGroup) {
+					kgp.GET("/all", api.CrewKpiRule.GetAll)
+					//kgp.POST("/create", api.CrewOvertimeRule.Create)
+					//kgp.PUT("/modify", api.CrewOvertimeRule.Modify)
+					//kgp.DELETE("/delete", api.CrewOvertimeRule.Delete)
+				})
 			})
 		})
 
@@ -178,6 +196,10 @@ func init() {
 					//amgp.GET("/info", api.ProductMemberKpi.GetOne)
 					//agp.DELETE("/delete", api.LevelAssess.Delete)
 				})
+				// 阶段团队成员关键事件
+				agp.Group("/crucial", func(cgp *ghttp.RouterGroup) {
+					cgp.GET("/lists", api.ProductMemberKey.GetList)
+				})
 				// 阶段团队成员激励计算
 				agp.Group("/prize", func(apgp *ghttp.RouterGroup) {
 					apgp.POST("/compute", api.ProductMemberPrize.Compute)
@@ -198,17 +220,43 @@ func init() {
 			pg.Middleware(service.Middleware.LoggedIn, service.Middleware.Role, service.Middleware.BusinessRole)
 			pg.GET("/lists", api.Product.GetList)
 			pg.GET("/info", api.Product.GetOne)
+			pg.GET("/detail", api.Product.GetDetail)
 			pg.POST("/create", api.Product.Create)
+			pg.DELETE("/delete", api.Product.Delete)
 			pg.PUT("/modify", api.Product.Modify)
 			// 项目组成员信息
 			pg.Group("/member", func(pmg *ghttp.RouterGroup) {
-				pmg.POST("/import/{proId}", api.ProductMember.Import)
+				pmg.POST("/import", api.ProductMember.Import)
 				pmg.GET("/lists", api.ProductMember.GetList)
 				pmg.GET("/info", api.ProductMember.GetOne)
 				pmg.POST("/create", api.ProductMember.Create)
 				pmg.PUT("/modify", api.ProductMember.Modify)
 				// TODO 删除成员信息
 				//pmg.DELETE("/modify", api.ProductMember.Modify)
+			})
+			// 项目阶段信息 TODO
+			pg.Group("/stage", func(psg *ghttp.RouterGroup) {
+				psg.GET("/all/{proId}", api.ProductStage.GetList)
+				//pmg.GET("/info", api.ProductMember.GetOne)
+				//pmg.POST("/create", api.ProductMember.Create)
+				//pmg.PUT("/modify", api.ProductMember.Modify)
+				// TODO 删除成员信息
+				//pmg.DELETE("/modify", api.ProductMember.Modify)
+			})
+		})
+
+		// 统计数据
+		group.Group("/statistics", func(sg *ghttp.RouterGroup) {
+			// 总量统计
+			sg.Group("/summation", func(sumg *ghttp.RouterGroup) {
+				sumg.GET("/inspire", api.StatisticsSummation.GetInspire)
+				sumg.GET("/stage", api.StatisticsSummation.GetStage)
+			})
+			// 项目阶段统计
+			sg.Group("/product", func(sumg *ghttp.RouterGroup) {
+				sumg.GET("/stage", api.StatisticsSummation.GetProductStage)
+				sumg.GET("/score", api.StatisticsSummation.GetProductStageScore)
+				sumg.GET("/top", api.StatisticsSummation.GetProductStageTop)
 			})
 		})
 	})

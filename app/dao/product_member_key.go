@@ -5,7 +5,16 @@
 package dao
 
 import (
+	"context"
+	"encoding/json"
+	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/lj1570693659/gfcq_product_kpi/app/dao/internal"
+	"github.com/lj1570693659/gfcq_product_kpi/app/model"
+	"github.com/lj1570693659/gfcq_product_kpi/app/model/do"
+	"github.com/lj1570693659/gfcq_product_kpi/library/response"
+	"github.com/lj1570693659/gfcq_product_kpi/library/util"
 )
 
 // internalProductMemberKeyDao is internal type for wrapping internal DAO implements.
@@ -25,3 +34,61 @@ var (
 )
 
 // Fill with you ideas below.
+
+func (s *productMemberKeyDao) Create(ctx context.Context, in *model.ProductMemberKey) (*model.ProductMemberKey, error) {
+	data := do.ProductMemberKey{}
+	input, _ := json.Marshal(in)
+	err := json.Unmarshal(input, &data)
+	if err != nil {
+		return in, err
+	}
+
+	data.CreateTime = gtime.Now()
+	data.UpdateTime = gtime.Now()
+	if g.IsEmpty(data.HappenTime) {
+		data.HappenTime = data.CreateTime
+	}
+	lastInsertId, err := s.Ctx(ctx).Data(data).InsertAndGetId()
+	if err != nil {
+		return in, err
+	}
+
+	in.Id = gconv.Uint(lastInsertId)
+	return in, nil
+}
+
+func (s *productMemberKeyDao) GetList(ctx context.Context, in model.ProductMemberKeyListsReq) (res *response.GetListResponse, entity []model.ProductMemberKey, err error) {
+	res = &response.GetListResponse{}
+	entity = make([]model.ProductMemberKey, 0)
+	query := s.Ctx(ctx)
+	// 项目名称
+	if in.ProStageId > 0 {
+		query = query.Where(s.Columns().ProStageId, in.ProStageId)
+	}
+	// 项目简称
+	if in.ProId > 0 {
+		query = query.Where(s.Columns().ProId, in.ProId)
+	}
+	// 项目经理投入程度
+	if in.ProEmpId > 0 {
+		query = query.Where(s.Columns().ProEmpId, in.ProEmpId)
+	}
+	if in.Id > 0 {
+		query = query.Where(s.Columns().Id, in.Id)
+	}
+
+	query, totalSize, page, size, err := util.GetListWithPage(query, in.Page, in.Size)
+	if err != nil {
+		return res, entity, err
+	}
+
+	if err = query.Scan(&entity); err != nil {
+		return res, entity, err
+	}
+
+	res.Page = page
+	res.Size = size
+	res.TotalSize = totalSize
+	res.Data = entity
+	return res, entity, nil
+}

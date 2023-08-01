@@ -24,6 +24,7 @@ type ProductMemberKeyColumns struct {
 	StageKpiId string // 项目绩效ID
 	ProId      string // 项目ID
 	ProEmpId   string // 小组成员ID
+	ProStageId string // 项目-阶段ID
 	WorkNumber string // 成员工号
 	Username   string // 成员姓名
 	KeyName    string // 关键事件名称
@@ -42,6 +43,7 @@ var productMemberKeyColumns = ProductMemberKeyColumns{
 	StageKpiId: "stage_kpi_id",
 	ProId:      "pro_id",
 	ProEmpId:   "pro_emp_id",
+	ProStageId: "pro_stage_id",
 	WorkNumber: "work_number",
 	Username:   "username",
 	KeyName:    "key_name",

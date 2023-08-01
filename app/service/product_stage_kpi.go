@@ -14,6 +14,7 @@ import (
 	"github.com/lj1570693659/gfcq_product_kpi/consts"
 	"github.com/lj1570693659/gfcq_product_kpi/library/response"
 	"github.com/lj1570693659/gfcq_product_kpi/library/util"
+	common "github.com/lj1570693659/gfcq_protoc/common/v1"
 	inspirit "github.com/lj1570693659/gfcq_protoc/config/inspirit/v1"
 	v1 "github.com/lj1570693659/gfcq_protoc/config/product/v1"
 )
@@ -57,16 +58,43 @@ func (s *productStageKpiService) Modify(ctx context.Context, in *model.ProductSt
 
 // GetList 项目清单
 func (s *productStageKpiService) GetList(ctx context.Context, in *model.ProductStageKpiApiGetListReq) (res *response.GetListResponse, err error) {
-	res, err = dao.ProductStageKpi.GetList(ctx, in.ProductStageKpi, in.Page, in.Size)
+	resData := make([]model.ProductStageKpiList, 0)
+	res, productEntity, err := dao.ProductStageKpi.GetList(ctx, in)
 	if err != nil {
 		return res, err
 	}
+
+	productList, err := dao.Product.GetAll(ctx, model.ProductWhere{})
+	if err != nil {
+		return res, err
+	}
+
+	if res.TotalSize > 0 {
+		for _, v := range productEntity {
+			info := model.ProductStageKpiList{
+				ProductStageKpi: v,
+			}
+			// 项目信息
+			info.ProductInfo, err = s.getProductInfo(v.ProId, productList)
+			if err != nil {
+				return res, err
+			}
+			info.StageInfo, err = dao.ProductStageRule.GetOne(ctx, &model.ProductStageRule{Id: v.StageId})
+			if err != nil {
+				return res, err
+			}
+			resData = append(resData, info)
+		}
+	}
+	res.Data = resData
 	return res, nil
 }
 
 // GetOne 项目绩效详情
 func (s *productStageKpiService) GetOne(ctx context.Context, in *model.ProductStageKpi) (res model.ProductStageKpiInfo, err error) {
 	res = model.ProductStageKpiInfo{
+		PmInfo:          &model.Employee{},
+		PmlInfo:         &model.Employee{},
 		ProductStageKpi: &model.ProductStageKpi{},
 		ProductInfo: &model.ProductInfo{
 			Product: &model.Product{},
@@ -84,6 +112,24 @@ func (s *productStageKpiService) GetOne(ctx context.Context, in *model.ProductSt
 	}
 	infoByte, _ := json.Marshal(productInfo)
 	json.Unmarshal(infoByte, res.ProductInfo.Product)
+
+	//项目经理信息
+	pmInfo, err := boot.EmployeeServer.GetOne(ctx, &common.GetOneEmployeeReq{Id: gconv.Int32(productInfo.PmId)})
+	if err != nil {
+		return res, err
+	}
+	pmInfoByte, _ := json.Marshal(pmInfo.GetEmployee())
+	json.Unmarshal(pmInfoByte, res.PmInfo)
+
+	//项目负责人信息
+	if productInfo.PmlId > 0 {
+		pmlInfo, err := boot.EmployeeServer.GetOne(ctx, &common.GetOneEmployeeReq{Id: gconv.Int32(productInfo.PmlId)})
+		if err != nil {
+			return res, err
+		}
+		pmlInfoByte, _ := json.Marshal(pmlInfo.GetEmployee())
+		json.Unmarshal(pmlInfoByte, res.PmlInfo)
+	}
 
 	// 项目类型
 	typeInfo, err := boot.TypeServer.GetOne(ctx, &v1.GetOneTypeReq{Type: &v1.TypeInfo{Id: gconv.Int32(productInfo.Tid)}})
@@ -189,7 +235,7 @@ func (s *productStageKpiService) completeInputData(ctx context.Context, in *mode
 	if g.IsEmpty(businessRadio) {
 		return res, errors.New("请先完善项目业务支持激励比例配置信息")
 	}
-	res.TeamBuildQuota = util.Decimal(res.StageQuota * gconv.Float64(businessRadio))
+	res.SupportQuota = util.Decimal(res.StageQuota * gconv.Float64(businessRadio))
 
 	// PM发放基础 = 团队额度 * PM分配比例
 	res.PmBase = res.CrewQuota * res.PmRadio
@@ -205,4 +251,16 @@ func (s *productStageKpiService) completeInputData(ctx context.Context, in *mode
 	res.PmKpiLevelName = kpiLevel.LevelName
 	//PM实际应发额度
 	return res, nil
+}
+
+func (s *productStageKpiService) getProductInfo(proId uint, productList []model.Product) (info model.Product, err error) {
+	if len(productList) == 0 {
+		return info, errors.New("项目清单数据为空，请先完善项目信息")
+	}
+	for _, v := range productList {
+		if proId == v.Id {
+			return v, nil
+		}
+	}
+	return
 }

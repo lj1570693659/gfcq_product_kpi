@@ -16,6 +16,7 @@ type ProductMemberKey struct {
 	StageKpiId interface{} // 项目绩效ID
 	ProId      interface{} // 项目ID
 	ProEmpId   interface{} // 小组成员ID
+	ProStageId interface{} // 项目-阶段ID
 	WorkNumber interface{} // 成员工号
 	Username   interface{} // 成员姓名
 	KeyName    interface{} // 关键事件名称

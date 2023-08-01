@@ -14,6 +14,7 @@ type ProductMemberKey struct {
 	StageKpiId uint        `json:"stageKpiId" ` // 项目绩效ID
 	ProId      uint        `json:"proId"      ` // 项目ID
 	ProEmpId   uint        `json:"proEmpId"   ` // 小组成员ID
+	ProStageId uint        `json:"proStageId" ` // 项目-阶段ID
 	WorkNumber string      `json:"workNumber" ` // 成员工号
 	Username   string      `json:"username"   ` // 成员姓名
 	KeyName    string      `json:"keyName"    ` // 关键事件名称

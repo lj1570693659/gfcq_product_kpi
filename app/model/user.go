@@ -21,8 +21,8 @@ type UserApiSignUpReq struct {
 
 // UserApiSignInReq 登录请求参数，用于前后端交互参数格式约定
 type UserApiSignInReq struct {
-	WorkNumber string `v:"required#账号不能为空"`
-	Password   string `v:"required#密码不能为空"`
+	WorkNumber string `v:"required#账号不能为空" json:"workNumber"`
+	Password   string `v:"required#密码不能为空" json:"password"`
 }
 
 // UserApiCheckWorkNumberReq 账号唯一性检测请求参数，用于前后端交互参数格式约定

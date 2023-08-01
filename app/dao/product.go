@@ -37,9 +37,9 @@ var (
 
 // Fill with you ideas below.
 
-func (s *productDao) GetList(ctx context.Context, in model.ProductWhere, page, size int32) (res *response.GetListResponse, err error) {
+func (s *productDao) GetList(ctx context.Context, in model.ProductWhere, page, size int32) (res *response.GetListResponse, productEntity []model.Product, err error) {
 	res = &response.GetListResponse{}
-	productEntity := make([]*entity.Product, 0)
+	productEntity = make([]model.Product, 0)
 	query := s.Ctx(ctx)
 	// 项目名称
 	if len(in.Name) > 0 {
@@ -76,23 +76,22 @@ func (s *productDao) GetList(ctx context.Context, in model.ProductWhere, page, s
 
 	query, totalSize, page, size, err := util.GetListWithPage(query, page, size)
 	if err != nil {
-		return res, err
+		return res, productEntity, err
 	}
 
 	if err = query.Scan(&productEntity); err != nil {
-		return res, err
+		return res, productEntity, err
 	}
 
 	res.Page = page
 	res.Size = size
 	res.TotalSize = totalSize
 	res.Data = productEntity
-	return res, nil
+	return res, productEntity, nil
 }
 
-func (s *productDao) GetOne(ctx context.Context, in model.Product) (res *entity.Product, err error) {
-	//res = &response.GetListResponse{}
-	productEntity := &entity.Product{}
+func (s *productDao) GetOne(ctx context.Context, in model.Product) (res model.Product, err error) {
+	productEntity := model.Product{}
 	query := s.Ctx(ctx)
 	// 项目名称
 	if len(in.Name) > 0 {
@@ -155,8 +154,57 @@ func (s *productDao) Modify(ctx context.Context, in *entity.Product) (*entity.Pr
 	return in, nil
 }
 
+func (s *productDao) Delete(ctx context.Context, id uint) (bool, error) {
+	_, err := s.Ctx(ctx).Where(s.Columns().Id, id).Delete()
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 func (s *productDao) GetOneByCondition(ctx context.Context, condition g.Map) (*entity.Product, error) {
 	info := &entity.Product{}
 	err := s.Ctx(ctx).Where(condition).Scan(info)
 	return info, err
+}
+
+func (s *productDao) GetAll(ctx context.Context, in model.ProductWhere) (res []model.Product, err error) {
+	res = make([]model.Product, 0)
+	query := s.Ctx(ctx)
+	// 项目名称
+	if len(in.Name) > 0 {
+		query = query.Where(fmt.Sprintf("%s like ?", s.Columns().Name), g.Slice{fmt.Sprintf("%s%s", in.Name, "%")})
+	}
+	// 项目简称
+	if len(in.SubName) > 0 {
+		query = query.Where(fmt.Sprintf("%s like ?", s.Columns().SubName), g.Slice{fmt.Sprintf("%s%s", in.SubName, "%")})
+	}
+	// 项目优先级ID
+	if len(in.LccId) > 0 {
+		query = query.WhereIn(s.Columns().LccId, in.LccId)
+	}
+	// 项目类型ID
+	if len(in.Tid) > 0 {
+		query = query.WhereIn(s.Columns().Tid, in.Tid)
+	}
+	// 项目经理ID
+	if len(in.PmId) > 0 {
+		query = query.WhereIn(s.Columns().PmId, in.PmId)
+	}
+	// 项目责任人ID
+	if len(in.PmlId) > 0 {
+		query = query.WhereIn(s.Columns().PmlId, in.PmId)
+	}
+	// 项目经理投入程度
+	if in.Attribute > 0 {
+		query = query.Where(s.Columns().Attribute, in.Attribute)
+	}
+	// 项目当前状态
+	if len(in.Status) > 0 {
+		query = query.WhereIn(s.Columns().Status, in.PmId)
+	}
+
+	err = query.Scan(&res)
+	return res, err
 }

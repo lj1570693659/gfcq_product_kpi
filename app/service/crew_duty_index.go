@@ -5,6 +5,7 @@ import (
 	"github.com/gogf/gf/util/gconv"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/boot"
+	common "github.com/lj1570693659/gfcq_protoc/common/v1"
 	v1 "github.com/lj1570693659/gfcq_protoc/config/inspirit/v1"
 )
 
@@ -14,14 +15,35 @@ var CrewDutyIndex = crewDutyIndexService{}
 type crewDutyIndexService struct{}
 
 // GetAll 获取项目责任指数信息列表
-func (s *crewDutyIndexService) GetAll(ctx context.Context, input *model.CrewDutyIndex) (*v1.GetAllCrewDutyIndexRes, error) {
-	res, err := boot.CrewDutyIndexServer.GetAll(ctx, &v1.GetAllCrewDutyIndexReq{
+func (s *crewDutyIndexService) GetAll(ctx context.Context, input *model.CrewDutyIndex) ([]model.CrewDutyIndexApiAll, error) {
+	res := make([]model.CrewDutyIndexApiAll, 0)
+	resDuty, err := boot.CrewDutyIndexServer.GetAll(ctx, &v1.GetAllCrewDutyIndexReq{
 		CrewDutyIndex: &v1.CrewDutyIndexInfo{
 			Remark:     input.Remark,
 			ScoreIndex: gconv.Uint32(input.ScoreIndex),
 			JobLevelId: gconv.Uint32(input.JobLevelId),
 		},
 	})
+	if len(resDuty.GetData()) > 0 {
+		for _, v := range resDuty.GetData() {
+			info, err := boot.JobLevelServer.GetOne(ctx, &common.GetOneJobLevelReq{
+				Id: gconv.Int32(v.GetJobLevelId()),
+			})
+			if err != nil {
+				return res, err
+			}
+			res = append(res, model.CrewDutyIndexApiAll{
+				CrewDutyInfo: model.CrewDutyIndex{
+					Id:         gconv.Uint(v.Id),
+					ScoreIndex: gconv.Uint(v.ScoreIndex),
+					JobLevelId: gconv.Uint(v.JobLevelId),
+					Arith:      v.Arith.String(),
+					Remark:     v.Remark,
+				},
+				JobLevelName: info.GetJobLevel().Name,
+			})
+		}
+	}
 	return res, err
 }
 

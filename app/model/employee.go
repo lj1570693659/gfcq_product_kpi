@@ -9,6 +9,7 @@ type Employee entity.Employee
 // EmployeeApiCreateReq 创建员工信息
 type EmployeeApiCreateReq struct { // 员工姓名
 	UserName     string `v:"required|length:2,16#姓名不能为空|姓名长度应当在:2到:16之间" json:"userName"     `        // 员工姓名
+	WorkNumber   string `json:"workNumber"     `                                                      // 员工姓名
 	Sex          uint   `v:"required|in:0,1,2#请选择性别|请选择正确的性别" json:"sex"          `                   // 性别（0：未知 1：男  2：女）
 	Phone        string `v:"phone-loose#请输入正确格式的手机号码" json:"phone"        `                           // 手机号码
 	Email        string `v:"email#请输入正确格式的邮箱" json:"email"        `                                   // 邮箱号码
@@ -23,6 +24,7 @@ type EmployeeApiCreateReq struct { // 员工姓名
 type EmployeeApiModifyReq struct {
 	ID           int    `v:"required|integer#删除数据源不能为空|删除数据源错误" json:"id"     `                       // 员工姓名
 	UserName     string `v:"required|length:2,16#姓名不能为空|姓名长度应当在:2到:16之间" json:"userName"     `        // 员工姓名
+	WorkNumber   string `json:"workNumber"     `                                                      // 员工姓名
 	Sex          uint   `v:"required|in:0,1,2#请选择性别|请选择正确的性别" json:"sex"          `                   // 性别（0：未知 1：男  2：女）
 	Phone        string `v:"phone-loose#请输入正确格式的手机号码" json:"phone"        `                           // 手机号码
 	Email        string `v:"email#请输入正确格式的邮箱" json:"email"        `                                   // 邮箱号码
@@ -53,7 +55,21 @@ type EmployeeApiGetOneReq struct {
 // EmployeeApiGetOneRes 员工信息列表
 type EmployeeApiGetOneRes struct {
 	EmployeeInfo   Employee            `json:"employeeInfo"`   // 员工主体信息
+	SexName        string              `json:"sexName"`        // 性别-中文显示
+	StatusName     string              `json:"statusName"`     // 性别-中文显示
 	JobInfo        []entity.Job        `json:"jobInfo"`        // 员工岗位信息
+	JobName        string              `json:"jobName"`        // 员工岗位信息
+	LevelInfo      JobLevel            `json:"levelInfo"`      // 员工职级信息
+	InstructorInfo Employee            `json:"instructorInfo"` // 员工职级信息
 	DepartmentInfo []entity.Department `json:"departmentInfo"` // 员工所在部门信息
+	DepartmentName string              `json:"departmentName"` // 员工岗位信息
 	ProductInfo    []entity.Product    `json:"productInfo"`    // 员工涉及项目信息
+}
+
+// GetListEmployeeRes 列表接口输出数据结构
+type GetListEmployeeRes struct {
+	Page      int32                  `json:"Page"`
+	Size      int32                  `json:"Size"`
+	TotalSize int32                  `json:"TotalSize"`
+	Data      []EmployeeApiGetOneRes `json:"Data"`
 }

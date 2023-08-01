@@ -27,6 +27,19 @@ func (s *jobLevelService) GetList(ctx context.Context, input *model.JobLevelApiG
 	return res, err
 }
 
+// GetAll 获取职级信息列表
+func (s *jobLevelService) GetAll(ctx context.Context, input *model.JobLevel) (*v1.GetAllJobLevelRes, error) {
+	res := &v1.GetAllJobLevelRes{}
+	res, err := boot.JobLevelServer.GetAll(ctx, &v1.GetAllJobLevelReq{
+		JobLevel: &v1.JobLevelInfo{
+			Name:   input.Name,
+			Remark: input.Remark,
+		},
+		Sort: v1.OrderEnum_desc,
+	})
+	return res, err
+}
+
 // GetOne 获取职级信息详情
 func (s *jobLevelService) GetOne(ctx context.Context, input *model.JobLevel) (res *v1.GetOneJobLevelRes, err error) {
 	info, err := boot.JobLevelServer.GetOne(ctx, &v1.GetOneJobLevelReq{

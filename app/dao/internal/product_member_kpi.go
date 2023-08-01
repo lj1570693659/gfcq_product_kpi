@@ -21,6 +21,7 @@ type ProductMemberKpiDao struct {
 // ProductMemberKpiColumns defines and stores column names for table cqgf_product_member_kpi.
 type ProductMemberKpiColumns struct {
 	Id            string //
+	IsPm          string // 是否是PM（1：是 2：否）
 	ProId         string // 项目ID
 	ProEmpId      string // 小组成员ID
 	ProStageId    string // 项目-阶段ID
@@ -41,6 +42,7 @@ type ProductMemberKpiColumns struct {
 // productMemberKpiColumns holds the columns for table cqgf_product_member_kpi.
 var productMemberKpiColumns = ProductMemberKpiColumns{
 	Id:            "id",
+	IsPm:          "is_pm",
 	ProId:         "pro_id",
 	ProEmpId:      "pro_emp_id",
 	ProStageId:    "pro_stage_id",

@@ -51,10 +51,11 @@ func (a *userApi) SignIn(r *ghttp.Request) {
 	if err := r.Parse(&data); err != nil {
 		response.JsonExit(r, response.NotSignedIn, err.Error())
 	}
-	if err := service.User.SignIn(r.Context(), data.WorkNumber, data.Password); err != nil {
+	userInfo, err := service.User.SignIn(r.Context(), data.WorkNumber, data.Password)
+	if err != nil {
 		response.JsonExit(r, response.NotSignedIn, err.Error())
 	} else {
-		response.JsonExit(r, response.Success, "ok")
+		response.JsonExit(r, response.Success, "ok", userInfo)
 	}
 }
 
@@ -85,7 +86,7 @@ func (a *userApi) SignOut(r *ghttp.Request) {
 	response.JsonExit(r, response.Success, "ok")
 }
 
-// @summary 获取用户详情信息
+// Profile @summary 获取用户详情信息
 // @tags    用户服务
 // @produce json
 // @router  /system/account/user/profile [GET]

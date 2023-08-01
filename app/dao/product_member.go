@@ -14,7 +14,6 @@ import (
 	"github.com/lj1570693659/gfcq_product_kpi/app/dao/internal"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model/do"
-	"github.com/lj1570693659/gfcq_product_kpi/app/model/entity"
 	"github.com/lj1570693659/gfcq_product_kpi/library/response"
 	"github.com/lj1570693659/gfcq_product_kpi/library/util"
 )
@@ -37,9 +36,9 @@ var (
 
 // Fill with you ideas below.
 
-func (s *productMemberDao) GetList(ctx context.Context, in model.ProductMemberWhere, page, size int32) (res *response.GetListResponse, err error) {
+func (s *productMemberDao) GetList(ctx context.Context, in *model.ProductMemberGetListReq) (res *response.GetListResponse, dataEntity []model.ProductMember, err error) {
 	res = &response.GetListResponse{}
-	entity := make([]*entity.ProductMember, 0)
+	dataEntity = make([]model.ProductMember, 0)
 	query := s.Ctx(ctx)
 	// 项目名称
 	if len(in.WorkNumber) > 0 {
@@ -66,20 +65,20 @@ func (s *productMemberDao) GetList(ctx context.Context, in model.ProductMemberWh
 		query = query.WhereIn(s.Columns().Attribute, in.Attribute)
 	}
 
-	query, totalSize, page, size, err := util.GetListWithPage(query, page, size)
+	query, totalSize, page, size, err := util.GetListWithPage(query, in.Page, in.Size)
 	if err != nil {
-		return res, err
+		return res, dataEntity, err
 	}
 
-	if err = query.Scan(&entity); err != nil {
-		return res, err
+	if err = query.Scan(&dataEntity); err != nil {
+		return res, dataEntity, err
 	}
 
 	res.Page = page
 	res.Size = size
 	res.TotalSize = totalSize
-	res.Data = entity
-	return res, nil
+	res.Data = dataEntity
+	return res, dataEntity, nil
 }
 
 // GetAll 团队成员清单 - 不分页
@@ -118,8 +117,8 @@ func (s *productMemberDao) GetAll(ctx context.Context, in *model.ProductMemberWh
 	return res, nil
 }
 
-func (s *productMemberDao) GetOne(ctx context.Context, in model.ProductMember) (res *entity.ProductMember, err error) {
-	res = &entity.ProductMember{}
+func (s *productMemberDao) GetOne(ctx context.Context, in model.ProductMember) (res *model.ProductMember, err error) {
+	res = &model.ProductMember{}
 	query := s.Ctx(ctx)
 	// 项目名称
 	if len(in.WorkNumber) > 0 {
@@ -133,6 +132,9 @@ func (s *productMemberDao) GetOne(ctx context.Context, in model.ProductMember) (
 	if in.Attribute > 0 {
 		query = query.Where(s.Columns().Attribute, in.Attribute)
 	}
+	if in.IsSpecial > 0 {
+		query = query.Where(s.Columns().IsSpecial, in.IsSpecial)
+	}
 	if in.Id > 0 {
 		query = query.Where(s.Columns().Id, in.Id)
 	}
@@ -143,7 +145,7 @@ func (s *productMemberDao) GetOne(ctx context.Context, in model.ProductMember) (
 }
 
 // Create 创建项目基础数据
-func (s *productMemberDao) Create(ctx context.Context, in *entity.ProductMember) (*entity.ProductMember, error) {
+func (s *productMemberDao) Create(ctx context.Context, in *model.ProductMember) (*model.ProductMember, error) {
 	data := do.ProductMember{}
 	input, _ := json.Marshal(in)
 	err := json.Unmarshal(input, &data)
@@ -163,7 +165,7 @@ func (s *productMemberDao) Create(ctx context.Context, in *entity.ProductMember)
 }
 
 // Modify 编辑项目基础数据
-func (s *productMemberDao) Modify(ctx context.Context, in *entity.ProductMember) (*entity.ProductMember, error) {
+func (s *productMemberDao) Modify(ctx context.Context, in *model.ProductMember) (*model.ProductMember, error) {
 	data := do.ProductMember{}
 	input, _ := json.Marshal(in)
 	err := json.Unmarshal(input, &data)

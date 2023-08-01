@@ -14,6 +14,7 @@ import (
 	v1 "github.com/lj1570693659/gfcq_protoc/common/v1"
 	inspirit "github.com/lj1570693659/gfcq_protoc/config/inspirit/v1"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -59,12 +60,63 @@ func DeleteIntSlice(a []string) []string {
 	return ret
 }
 
+func GetEmploySex(name v1.SexEnum) string {
+	attributeName := map[v1.SexEnum]string{
+		v1.SexEnum_unknow: "未知",
+		v1.SexEnum_man:    "男",
+		v1.SexEnum_woman:  "女",
+	}
+	return attributeName[name]
+}
+
+// GetEmployStatus  '在职状态（1：在职 2：试用期 3：实习期 4：已离职）',
+func GetEmployStatus(name v1.StatusEnum) string {
+	attributeName := map[v1.StatusEnum]string{
+		v1.StatusEnum_anything:   "未知",
+		v1.StatusEnum_working:    "在职",
+		v1.StatusEnum_tryout:     "试用期",
+		v1.StatusEnum_interns:    "实习期",
+		v1.StatusEnum_terminated: "已离职",
+	}
+	return attributeName[name]
+}
+
 func GetEmployAttribute(name string) uint {
 	attributeName := map[string]uint{
 		"兼职": consts.PartTime,
 		"全职": consts.FullTime,
 	}
 	return attributeName[name]
+}
+
+func GetIsGuide(name uint) string {
+	isGuideName := map[uint]string{
+		0: "否",
+		1: "是",
+	}
+	return isGuideName[name]
+}
+
+func GetFloatKeyType(name string) uint {
+	devote := consts.ElseDevote
+	//1：加班贡献 2：解决问题贡献 3：其他事件贡献
+	if strings.Contains(name, "加班") {
+		devote = consts.OverTimeDevote
+	} else if strings.Contains(name, "解决问题") {
+		devote = consts.SolveProblemDevote
+	}
+	return gconv.Uint(devote)
+}
+
+// GetFloatKeyProperty 1：正向激励 2：有待提高
+func GetFloatKeyProperty(floatRaio float64) uint {
+	var devote uint
+	if floatRaio > 0 {
+		devote = consts.ForwardDirection
+	} else {
+		devote = consts.ReverseDirection
+	}
+	return devote
 }
 
 func Decimal(value float64) float64 {

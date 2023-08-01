@@ -13,6 +13,7 @@ import (
 type ProductMemberKpi struct {
 	g.Meta        `orm:"table:cqgf_product_member_kpi, do:true"`
 	Id            interface{} //
+	IsPm          interface{} // 是否是PM（1：是 2：否）
 	ProId         interface{} // 项目ID
 	ProEmpId      interface{} // 小组成员ID
 	ProStageId    interface{} // 项目-阶段ID

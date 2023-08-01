@@ -24,6 +24,7 @@ type ProductRolesColumns struct {
 	Name       string //
 	Pid        string // 上级角色
 	Explain    string // 角色与职责说明
+	IsSpecial  string // 1: 需要特殊处理 2：不需要特殊处理
 	Remark     string // 预留备注信息
 	CreateTime string // 新增数据时间
 	UpdateTime string // 最后一次更新数据时间
@@ -35,6 +36,7 @@ var productRolesColumns = ProductRolesColumns{
 	Name:       "name",
 	Pid:        "pid",
 	Explain:    "explain",
+	IsSpecial:  "is_special",
 	Remark:     "remark",
 	CreateTime: "create_time",
 	UpdateTime: "update_time",

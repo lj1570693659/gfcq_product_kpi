@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
@@ -15,6 +16,7 @@ type middlewareService struct{}
 
 // Ctx 自定义上下文对象
 func (s *middlewareService) Ctx(r *ghttp.Request) {
+	fmt.Println("----------------------")
 	// 初始化，务必最开始执行
 	customCtx := &model.Context{
 		Session: r.Session,
@@ -43,7 +45,7 @@ func (s *middlewareService) Ctx(r *ghttp.Request) {
 		Context.SetUserJob(r.Context(), employeeInfo.JobInfo)
 		Context.SetUserProduct(r.Context(), employeeInfo.ProductInfo)
 	}
-
+	fmt.Println("----33333333------------------")
 	// 执行下一步请求逻辑
 	r.Middleware.Next()
 }
@@ -51,15 +53,18 @@ func (s *middlewareService) Ctx(r *ghttp.Request) {
 // LoggedIn 鉴权中间件，验证是否登录
 func (s *middlewareService) LoggedIn(r *ghttp.Request) {
 	if User.IsSignedIn(r.Context()) {
+		fmt.Println("islogin------------------")
 		r.Middleware.Next()
 	} else {
+		fmt.Println("islogin----------------false--")
 		response.JsonExit(r, http.StatusForbidden, "")
 	}
 }
 
-// Role 鉴权中间件，验证是否在允许角色组内 TODO
+// Role 鉴权中间件，验证是否在允许角色组内
 func (s *middlewareService) Role(r *ghttp.Request) {
 	ok, err := Casbin.CheckAuth(r.Context(), Context.Get(r.Context()).User, r, ROLE)
+	fmt.Println("Role----------------false--", ok, err)
 	if err != nil {
 		response.JsonExit(r, http.StatusForbidden, err.Error())
 	}
@@ -73,6 +78,7 @@ func (s *middlewareService) Role(r *ghttp.Request) {
 // BusinessRole 鉴权中间件，验证是否在项目组内 TODO
 func (s *middlewareService) BusinessRole(r *ghttp.Request) {
 	ok, err := Casbin.CheckAuth(r.Context(), Context.Get(r.Context()).User, r, BUSINESS_ROLE)
+	fmt.Println("BusinessRole----------------false--", ok, err)
 	if err != nil {
 		response.JsonExit(r, http.StatusForbidden, err.Error())
 	}

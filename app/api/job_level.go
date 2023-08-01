@@ -57,6 +57,28 @@ func (a *jobLevelApi) GetList(r *ghttp.Request) {
 
 }
 
+// GetAll SignUp @summary 获取部门信息列表
+// @tags    职级信息服务
+// @produce json
+// @param   entity  body model.JobLevelApiGetListReq true "注册请求"
+// @router  /system/organize/level/lists [GET]
+// @success 200 {object} response.JsonResponse "执行结果"
+func (a *jobLevelApi) GetAll(r *ghttp.Request) {
+	var input *model.JobLevel
+
+	if err := r.Parse(&input); err != nil {
+		response.JsonExit(r, response.FormatFailEmployee, err.Error())
+	}
+
+	res, err := service.JobLevel.GetAll(r.Context(), input)
+	if err != nil {
+		response.JsonExit(r, response.CreateFailEmployee, err.Error())
+	} else {
+		response.JsonExit(r, response.Success, "ok", res)
+	}
+
+}
+
 // Create SignUp @summary 完善部门信息
 // @tags    职级信息服务
 // @produce json

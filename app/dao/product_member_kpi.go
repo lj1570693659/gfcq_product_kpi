@@ -60,9 +60,9 @@ func (s *productMemberKpiDao) GetAll(ctx context.Context, in model.ProductMember
 	return ent, nil
 }
 
-func (s *productMemberKpiDao) GetList(ctx context.Context, in model.ProductMemberKpi, page, size int32) (res *response.GetListResponse, err error) {
+func (s *productMemberKpiDao) GetList(ctx context.Context, in model.ProductMemberKpiApiGetListReq) (res *response.GetListResponse, entity []*model.ProductMemberKpi, err error) {
 	res = &response.GetListResponse{}
-	entity := make([]*entity.ProductMemberKpi, 0)
+	entity = make([]*model.ProductMemberKpi, 0)
 	query := s.Ctx(ctx)
 	// 项目名称
 	if in.ProStageId > 0 {
@@ -80,20 +80,20 @@ func (s *productMemberKpiDao) GetList(ctx context.Context, in model.ProductMembe
 		query = query.Where(s.Columns().Id, in.Id)
 	}
 
-	query, totalSize, page, size, err := util.GetListWithPage(query, page, size)
+	query, totalSize, page, size, err := util.GetListWithPage(query, in.Page, in.Size)
 	if err != nil {
-		return res, err
+		return res, entity, err
 	}
 
 	if err = query.Scan(&entity); err != nil {
-		return res, err
+		return res, entity, err
 	}
 
 	res.Page = page
 	res.Size = size
 	res.TotalSize = totalSize
 	res.Data = entity
-	return res, nil
+	return res, entity, nil
 }
 
 // Create 创建项目基础数据
@@ -116,8 +116,8 @@ func (s *productMemberKpiDao) Create(ctx context.Context, in *model.ProductMembe
 	return in, nil
 }
 
-func (s *productMemberKpiDao) GetOne(ctx context.Context, in model.ProductMemberKpi) (res *entity.ProductMemberKpi, err error) {
-	res = &entity.ProductMemberKpi{}
+func (s *productMemberKpiDao) GetOne(ctx context.Context, in model.ProductMemberKpi) (res model.ProductMemberKpi, err error) {
+	res = model.ProductMemberKpi{}
 	query := s.Ctx(ctx)
 	// 项目名称
 	if in.ProStageId > 0 {
@@ -133,6 +133,9 @@ func (s *productMemberKpiDao) GetOne(ctx context.Context, in model.ProductMember
 	}
 	if in.Id > 0 {
 		query = query.Where(s.Columns().Id, in.Id)
+	}
+	if in.IsPm > 0 {
+		query = query.Where(s.Columns().IsPm, in.IsPm)
 	}
 
 	err = query.Scan(&res)

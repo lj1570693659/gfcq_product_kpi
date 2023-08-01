@@ -56,6 +56,28 @@ func (a *productApi) GetOne(r *ghttp.Request) {
 
 }
 
+// GetDetail @summary 项目详情
+// @tags    项目管理
+// @produce json
+// @param   entity  body model.ProductApiGetOneReq true "项目详情"
+// @router  /product/info [GET]
+// @success 200 {object} response.JsonResponse "执行结果"
+func (a *productApi) GetDetail(r *ghttp.Request) {
+	var input *model.ProductApiGetOneReq
+
+	if err := r.Parse(&input); err != nil {
+		response.JsonExit(r, response.FormatFailProduct, err.Error())
+	}
+
+	res, err := service.Product.GetDetail(r.Context(), input)
+	if err != nil {
+		response.JsonExit(r, response.GetOneFailProduct, err.Error())
+	} else {
+		response.JsonExit(r, response.Success, "ok", res)
+	}
+
+}
+
 // Create @summary 创建项目基础信息
 // @tags    项目管理
 // @produce json
@@ -91,6 +113,27 @@ func (a *productApi) Modify(r *ghttp.Request) {
 	}
 
 	if out, err := service.Product.Modify(r.Context(), input); err != nil {
+		response.JsonExit(r, response.CreateFailEmployee, err.Error(), out)
+	} else {
+		response.JsonExit(r, response.Success, "ok", out)
+	}
+
+}
+
+// Delete @summary 更新项目基础信息
+// @tags    项目管理
+// @produce json
+// @param   entity  body model.EmployeeApiModifyReq true "注册请求"
+// @router  /product/delete [PUT]
+// @success 200 {object} response.JsonResponse "执行结果"
+func (a *productApi) Delete(r *ghttp.Request) {
+	var input *model.Product
+
+	if err := r.Parse(&input); err != nil {
+		response.JsonExit(r, response.FormatFailEmployee, err.Error())
+	}
+
+	if out, err := service.Product.Delete(r.Context(), input); err != nil {
 		response.JsonExit(r, response.CreateFailEmployee, err.Error(), out)
 	} else {
 		response.JsonExit(r, response.Success, "ok", out)

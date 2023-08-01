@@ -52,6 +52,27 @@ func (s *productStageRuleDao) GetOne(ctx context.Context, in *model.ProductStage
 	return res, nil
 }
 
+func (s *productStageRuleDao) GetAll(ctx context.Context, in *model.ProductStageRule) (res []*model.ProductStageRule, err error) {
+	res = make([]*model.ProductStageRule, 0)
+	query := s.Ctx(ctx)
+	// 项目经理投入程度
+	if in.Id > 0 {
+		query = query.Where(s.Columns().Id, in.Id)
+	}
+	if in.ProId > 0 {
+		query = query.Where(s.Columns().ProId, in.ProId)
+	}
+	if in.ProStageId > 0 {
+		query = query.Where(s.Columns().ProStageId, in.ProStageId)
+	}
+
+	if err = query.Scan(&res); err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
 func (s *productStageRuleDao) Create(ctx context.Context, in model.ProductStageRule) error {
 	data := do.ProductStageRule{}
 	input, _ := json.Marshal(in)
@@ -64,4 +85,20 @@ func (s *productStageRuleDao) Create(ctx context.Context, in model.ProductStageR
 	data.UpdateTime = gtime.Now()
 	_, err = s.Ctx(ctx).Data(data).InsertAndGetId()
 	return err
+}
+
+func (s *productStageRuleDao) Delete(ctx context.Context, proId, id uint) (bool, error) {
+	query := s.Ctx(ctx)
+	if proId > 0 {
+		query = query.Where(s.Columns().ProId, proId)
+	}
+	if id > 0 {
+		query = query.Where(s.Columns().Id, id)
+	}
+	_, err := query.Delete()
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
