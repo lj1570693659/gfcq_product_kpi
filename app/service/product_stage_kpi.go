@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/lj1570693659/gfcq_product_kpi/app/dao"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
@@ -52,7 +53,23 @@ func (s *productStageKpiService) Modify(ctx context.Context, in *model.ProductSt
 		return err
 	}
 
+	// 更新绩效主表
 	_, err = dao.ProductStageKpi.Modify(ctx, input)
+	if err != nil {
+		return err
+	}
+
+	err = dao.ProductStageKpi.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+		// 更新团队成员绩效表
+		err = ProductMemberKpi.SyncPmKpi(ctx, in.ProId, in.StageId)
+
+		// 更新团队成员奖金分配
+		ProductMemberPrize.Compute(ctx, &model.ProductMemberPrizeComputeReq{
+			ProId:   input.ProId,
+			StageId: input.StageId,
+		})
+		return err
+	})
 	return err
 }
 

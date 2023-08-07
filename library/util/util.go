@@ -69,6 +69,18 @@ func GetEmploySex(name v1.SexEnum) string {
 	return attributeName[name]
 }
 
+func GetArith(name string) inspirit.ArithEnum {
+	attributeName := map[string]inspirit.ArithEnum{
+		"gt":  inspirit.ArithEnum_gt,
+		"lt":  inspirit.ArithEnum_lt,
+		"egt": inspirit.ArithEnum_egt,
+		"elt": inspirit.ArithEnum_elt,
+		"eq":  inspirit.ArithEnum_eq,
+		"neq": inspirit.ArithEnum_neq,
+	}
+	return attributeName[name]
+}
+
 // GetEmployStatus  '在职状态（1：在职 2：试用期 3：实习期 4：已离职）',
 func GetEmployStatus(name v1.StatusEnum) string {
 	attributeName := map[v1.StatusEnum]string{
@@ -213,4 +225,96 @@ func GetHoursIndexByScore(lists []*inspirit.CrewHoursIndexInfo, score float32) u
 		}
 	}
 	return 0
+}
+
+func GetUserRequestTypeName(methodName uint, requestModuleLists []string) string {
+	requestModule := ""
+	requestSecondModule := ""
+	if len(requestModuleLists) > 0 {
+		requestModule = requestModuleLists[0]
+		requestSecondModule = requestModuleLists[1]
+	}
+	methodTypes := map[uint]string{
+		consts.MethodGET:    "查询",
+		consts.MethodPOST:   "增加",
+		consts.MethodPUT:    "更新",
+		consts.MethodDELETE: "删除",
+	}
+	moduleName := fmt.Sprintf("%s/%s", requestModule, requestSecondModule)
+	secondModuleNameMap := map[string]string{
+		"system/account":  "账号管理",
+		"system/organize": "组织管理",
+		"config/product":  "项目配置",
+		"config/inspirit": "绩效配置",
+		"achieve/product": "项目绩效",
+		"product/create":  "项目",
+		"product/delete":  "项目",
+		"product/modify":  "项目",
+		"product/member":  "项目成员",
+		"product/stage":   "项目阀点",
+	}
+
+	// 三级模块
+	third := ""
+	if len(requestModuleLists) > 2 {
+		switch requestModuleLists[2] {
+		case "employee":
+			third = "员工信息"
+		case "department":
+			third = "部门信息"
+		case "level":
+			third = "职级信息"
+		case "job":
+			third = "岗位信息"
+		case "assess":
+			third = "评级标准"
+		case "confirm":
+			third = "优先级"
+		case "mode":
+			third = "研发模式"
+		case "type":
+			third = "项目类型"
+		case "stage":
+			third = "项目阶段"
+		case "roles":
+			third = "项目角色"
+		case "budget":
+			third = "激励预算"
+		case "radio":
+			third = "激励应发"
+		case "manage":
+			third = "管理指数"
+		case "hours":
+			third = "工时指数"
+		case "duty":
+			third = "责任指数"
+		case "solve":
+			third = "问题解决"
+		case "overtime":
+			third = "加班贡献"
+		case "kpiRule":
+			third = "绩效等级"
+		case "member":
+			third = "成员绩效"
+		case "crucial":
+			third = "关键事件"
+		case "prize":
+			third = "成员奖金"
+		}
+	}
+
+	actionName := ""
+	switch requestModuleLists[len(requestModuleLists)-1] {
+	case "export":
+		actionName = "导出"
+	case "import":
+		actionName = "导入"
+	case "compute":
+		actionName = "计算"
+	default:
+		actionName = methodTypes[methodName]
+
+	}
+	typeName := fmt.Sprintf("%s%s%s", actionName, secondModuleNameMap[moduleName], third)
+	return typeName
 }

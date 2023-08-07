@@ -10,6 +10,7 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/lj1570693659/gfcq_product_kpi/app/dao"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
+	"github.com/lj1570693659/gfcq_product_kpi/app/model/do"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model/entity"
 	"github.com/lj1570693659/gfcq_product_kpi/library/util"
 )
@@ -91,4 +92,24 @@ func (s *userService) CheckWorkNumber(ctx context.Context, WorkNumber string) bo
 // GetProfile 获得用户信息详情
 func (s *userService) GetProfile(ctx context.Context) *model.User {
 	return Session.GetUser(ctx)
+}
+
+func (s *userService) ChangePwd(ctx context.Context, userInfo *model.UserApiChangePwdReq) error {
+	var user *entity.User
+	err := dao.User.Ctx(ctx).Where(dao.User.Columns().WorkNumber, userInfo.WorkNumber).Scan(&user)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return errors.New("账号或密码错误")
+	}
+
+	_, err = dao.User.Ctx(ctx).Where(dao.User.Columns().Id, user.Id).OmitEmpty().Data(do.User{Password: util.Encrypt(userInfo.Password)}).Update()
+	if err != nil {
+		return err
+	}
+	g.Log("login").Info(ctx, user)
+
+	err = s.SignOut(ctx)
+	return err
 }

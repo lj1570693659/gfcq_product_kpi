@@ -2,6 +2,9 @@ package service
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/lj1570693659/gfcq_product_kpi/app/dao"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/library/response"
@@ -35,6 +38,76 @@ func (s *productMemberKeyService) GetList(ctx context.Context, in model.ProductM
 	}
 	res.Data = resData
 	return res, nil
+}
+
+func (s *productMemberKeyService) Create(ctx context.Context, in model.ProductMemberKeyApiChangeReq) error {
+	info, err := dao.ProductMemberKey.GetOne(ctx, model.ProductMemberKey{
+		StageKpiId: in.StageKpiId,
+	})
+	if err != nil && err.Error() != sql.ErrNoRows.Error() {
+		return err
+	}
+
+	if info.Id > 0 {
+		return errors.New("当前成员关键事件已存在，请勿重复创建")
+	}
+
+	data := &model.ProductMemberKey{
+		StageKpiId: in.StageKpiId,
+		ProId:      in.ProId,
+		ProEmpId:   in.ProEmpId,
+		ProStageId: in.ProStageId,
+		WorkNumber: in.WorkNumber,
+		Username:   in.Username,
+		KeyName:    in.KeyName,
+		HappenTime: in.HappenTime,
+		Type:       in.Type,
+		Property:   in.Property,
+		Result:     in.Result,
+		Remark:     in.Remark,
+	}
+	_, err = dao.ProductMemberKey.Create(ctx, data)
+
+	return err
+}
+
+func (s *productMemberKeyService) Modify(ctx context.Context, in model.ProductMemberKeyApiChangeReq) error {
+	info, err := dao.ProductMemberKey.GetOne(ctx, model.ProductMemberKey{
+		StageKpiId: in.StageKpiId,
+	})
+	if err != nil && err.Error() != sql.ErrNoRows.Error() {
+		return err
+	}
+
+	if g.IsEmpty(info.Id) {
+		return errors.New("当前成员关键事件不存在，请先创建")
+	}
+	data := &model.ProductMemberKey{
+		Id:         info.Id,
+		StageKpiId: info.StageKpiId,
+		ProId:      info.ProId,
+		ProEmpId:   info.ProEmpId,
+		ProStageId: info.ProStageId,
+		WorkNumber: info.WorkNumber,
+		Username:   info.Username,
+		KeyName:    in.KeyName,
+		HappenTime: in.HappenTime,
+		Type:       in.Type,
+		Property:   in.Property,
+		Result:     in.Result,
+		Remark:     in.Remark,
+	}
+
+	_, err = dao.ProductMemberKey.Modify(ctx, data)
+
+	return err
+}
+
+// Delete 删除项目优先级信息
+func (s *productMemberKeyService) Delete(ctx context.Context, input model.ProductMemberKeyApiDeleteReq) error {
+	_, err := dao.ProductMemberKey.Delete(ctx, input.ID)
+
+	return err
 }
 
 // Export 项目绩效详情

@@ -184,7 +184,6 @@ func (s *employeeService) GetOne(ctx context.Context, input *model.EmployeeApiGe
 		JobLevel:   []int32{int32(input.JobLevel)},
 		Status:     v1.StatusEnum(input.Status),
 	}
-
 	employeeInfo, err := boot.EmployeeServer.GetOne(ctx, where)
 	if err != nil {
 		return res, err
@@ -196,6 +195,7 @@ func (s *employeeService) GetOne(ctx context.Context, input *model.EmployeeApiGe
 
 		// 员工岗位信息
 		jobList := make([]entity.Job, 0)
+		jobName := make([]string, 0)
 		jobIds := gconv.Int32s(strings.Split(employeeInfo.Employee.JobId, ","))
 		if len(jobIds) > 0 {
 			for _, jobId := range jobIds {
@@ -212,12 +212,15 @@ func (s *employeeService) GetOne(ctx context.Context, input *model.EmployeeApiGe
 					DepartId: gconv.Int(job.Job.DepartId),
 					Remark:   job.Job.Remark,
 				})
+				jobName = append(jobName, job.Job.Name)
 			}
 		}
 		res.JobInfo = jobList
+		res.JobName = strings.Join(jobName, ",")
 
 		// 员工所在部门信息
 		departmentList := make([]entity.Department, 0)
+		departmentName := make([]string, 0)
 		departmentIds := gconv.Int32s(strings.Split(employeeInfo.Employee.DepartId, ","))
 		if len(departmentIds) > 0 {
 			for _, departId := range departmentIds {
@@ -234,10 +237,21 @@ func (s *employeeService) GetOne(ctx context.Context, input *model.EmployeeApiGe
 					Pid:    gconv.Int(departmentInfo.Department.Pid),
 					Remark: departmentInfo.Department.Remark,
 				})
+				departmentName = append(departmentName, departmentInfo.Department.Name)
 			}
 		}
 
 		res.DepartmentInfo = departmentList
+		res.DepartmentName = strings.Join(departmentName, ",")
+
+		// 职级信息
+		if employeeInfo.GetEmployee().GetJobLevel() > 0 {
+			jobLevel, err := boot.JobLevelServer.GetOne(ctx, &v1.GetOneJobLevelReq{Id: employeeInfo.GetEmployee().GetJobLevel()})
+			if err != nil {
+				return res, err
+			}
+			gconv.Struct(jobLevel.GetJobLevel(), &res.LevelInfo)
+		}
 	}
 
 	return res, err

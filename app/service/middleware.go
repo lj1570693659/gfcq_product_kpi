@@ -16,7 +16,6 @@ type middlewareService struct{}
 
 // Ctx 自定义上下文对象
 func (s *middlewareService) Ctx(r *ghttp.Request) {
-	fmt.Println("----------------------")
 	// 初始化，务必最开始执行
 	customCtx := &model.Context{
 		Session: r.Session,
@@ -45,7 +44,7 @@ func (s *middlewareService) Ctx(r *ghttp.Request) {
 		Context.SetUserJob(r.Context(), employeeInfo.JobInfo)
 		Context.SetUserProduct(r.Context(), employeeInfo.ProductInfo)
 	}
-	fmt.Println("----33333333------------------")
+
 	// 执行下一步请求逻辑
 	r.Middleware.Next()
 }
@@ -92,5 +91,15 @@ func (s *middlewareService) BusinessRole(r *ghttp.Request) {
 // CORS 允许接口跨域请求
 func (s *middlewareService) CORS(r *ghttp.Request) {
 	r.Response.CORSDefault()
+	r.Middleware.Next()
+}
+
+// SaveUserLog 保存用户操作记录
+func (s *middlewareService) SaveUserLog(r *ghttp.Request) {
+	err := UserLog.SaveLogData(r.Context(), r.Cookie, r.GetRequestMap(), r.Method, r.RequestURI)
+	if err != nil {
+		response.JsonExit(r, response.CreateFailLog, err.Error())
+	}
+
 	r.Middleware.Next()
 }

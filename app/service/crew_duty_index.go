@@ -5,6 +5,7 @@ import (
 	"github.com/gogf/gf/util/gconv"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/boot"
+	"github.com/lj1570693659/gfcq_product_kpi/library/util"
 	common "github.com/lj1570693659/gfcq_protoc/common/v1"
 	v1 "github.com/lj1570693659/gfcq_protoc/config/inspirit/v1"
 )
@@ -53,7 +54,7 @@ func (s *crewDutyIndexService) Create(ctx context.Context, input *model.CrewDuty
 		Remark:     input.Remark,
 		ScoreIndex: gconv.Uint32(input.ScoreIndex),
 		JobLevelId: gconv.Uint32(input.JobLevelId),
-		Arith:      v1.ArithEnum(input.Arith),
+		Arith:      util.GetArith(input.Arith),
 	})
 
 	return err
@@ -66,7 +67,7 @@ func (s *crewDutyIndexService) Modify(ctx context.Context, input *model.CrewDuty
 		Remark:     input.Remark,
 		ScoreIndex: gconv.Uint32(input.ScoreIndex),
 		JobLevelId: gconv.Uint32(input.JobLevelId),
-		Arith:      v1.ArithEnum(input.Arith),
+		Arith:      util.GetArith(input.Arith),
 	})
 
 	return err

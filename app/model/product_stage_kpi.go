@@ -1,6 +1,9 @@
 package model
 
-import "github.com/lj1570693659/gfcq_product_kpi/app/model/entity"
+import (
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/lj1570693659/gfcq_product_kpi/app/model/entity"
+)
 
 // ProductStageKpi 项目阶段绩效
 type ProductStageKpi entity.ProductStageKpi
@@ -151,6 +154,28 @@ type ProductMemberKeyListsReq struct {
 type ProductMemberKeyList struct {
 	ProductMemberKey ProductMemberKey `json:"productMemberKey"`
 	ProductMemberKpi ProductMemberKpi `json:"productMemberKpi"`
+}
+
+// ProductMemberKeyApiChangeReq 团队成员关键绩效接口单独输入
+type ProductMemberKeyApiChangeReq struct {
+	Id         uint        `json:"id"         `                                                //
+	StageKpiId uint        `v:"required|integer#项目组成员绩效不能为空|项目组成员绩效信息错误" json:"stageKpiId"`    // 项目绩效ID
+	ProId      uint        `v:"required|integer#项目信息不能为空|项目信息错误" json:"proId"`                 // 项目ID
+	ProEmpId   uint        `json:"proEmpId"`                                                   // 小组成员ID
+	ProStageId uint        `json:"proStageId"`                                                 // 项目-阶段ID
+	WorkNumber string      `json:"workNumber" `                                                // 成员工号
+	Username   string      `json:"username"   `                                                // 成员姓名
+	KeyName    string      `v:"required#关键事件名称不能为空" json:"keyName"    `                        // 关键事件名称
+	HappenTime *gtime.Time `v:"required#时间发生时间不能为空" json:"happenTime" `                        // 发生时间
+	Type       uint        `v:"required|in:1,2,3#关键事件分类不能为空|系统不包含当前关键事件分类" json:"type"       ` // 主体分类（1：加班贡献 2：解决问题贡献 3：其他事件贡献）
+	Property   uint        `v:"required|in:1,2#关键事件性质不能为空|系统不包含当前关键事件性质" json:"property"   `   // 事件性质（1：正向激励 2：有待提高）
+	Result     string      `v:"required#关键处理结果不能为空" json:"result"     `                        // 当前关键事件的处理结果
+	Remark     string      `json:"remark"     `                                                // 预留备注说明信息
+}
+
+// ProductMemberKeyApiDeleteReq 删除项目优先级信息
+type ProductMemberKeyApiDeleteReq struct {
+	ID uint `v:"required|integer#删除数据源不能为空|删除数据源错误" json:"id"` // 主键
 }
 
 // ----------------------------------团队成员奖金相关数据结构--------------------------------------

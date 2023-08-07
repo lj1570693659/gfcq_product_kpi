@@ -28,6 +28,7 @@ func (s *modeService) GetAll(ctx context.Context, input *model.Mode) (*v1.GetAll
 func (s *modeService) Create(ctx context.Context, input *model.ModeApiChangeReq) error {
 	_, err := boot.ModeServer.Create(ctx, &v1.CreateModeReq{
 		Name:   input.Name,
+		Factor: gconv.Float32(input.Factor),
 		Remark: input.Remark,
 	})
 
@@ -38,6 +39,7 @@ func (s *modeService) Create(ctx context.Context, input *model.ModeApiChangeReq)
 func (s *modeService) Modify(ctx context.Context, input *model.ModeApiChangeReq) error {
 	_, err := boot.ModeServer.Modify(ctx, &v1.ModifyModeReq{
 		Id:     gconv.Int32(input.ID),
+		Factor: gconv.Float32(input.Factor),
 		Name:   input.Name,
 		Remark: input.Remark,
 	})

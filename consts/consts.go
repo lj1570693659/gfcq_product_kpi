@@ -69,27 +69,15 @@ const (
 	ForwardDirection = 1
 	// ReverseDirection 2：有待提高
 	ReverseDirection = 2
-	//// IsNeedPml 需要项目负责人
-	//IsNeedPml = 1
-	//// IsNotNeedPml 不需要项目负责人
-	//IsNotNeedPml = 2
-	//
-	//// GT 大于
-	//GT = 1
-	//// LT 小于
-	//LT = 2
-	//// EGT 大于等于
-	//EGT = 3
-	//// ELT 小于等于
-	//ELT = 4
-	//// EQ 等于
-	//EQ = 5
-	//// NEQ 不等于
-	//NEQ = 6
-	////DemandHighLight 有突出贡献
-	//DemandHighLight = 1
-	//// DemandMiddle 有重要贡献
-	//DemandMiddle = 2
-	//// DemandLess 较低/无贡献
-	//DemandLess = 3
+
+	// MethodGET GET
+	MethodGET = 1
+	// MethodPOST POST
+	MethodPOST = 2
+	// MethodPUT PUT
+	MethodPUT = 3
+	// MethodDELETE DELETE
+	MethodDELETE = 4
+	// TokenName token值
+	TokenName = "gfcq_token"
 )

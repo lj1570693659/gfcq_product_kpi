@@ -9,6 +9,7 @@ import (
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/boot"
 	"github.com/lj1570693659/gfcq_product_kpi/consts"
+	inspirit "github.com/lj1570693659/gfcq_protoc/config/inspirit/v1"
 	v1 "github.com/lj1570693659/gfcq_protoc/config/product/v1"
 )
 
@@ -184,4 +185,46 @@ func (a *statisticsSummationService) GetProductStageTop(ctx context.Context) (st
 	}
 
 	return stageData, nil
+}
+
+// GetProductMemberLevel 项目组成员绩效等级统计
+func (a *statisticsSummationService) GetProductMemberLevel(ctx context.Context, in *model.ProductMemberStaticWhere) (resData model.ProductMemberStatic, err error) {
+	resData = model.ProductMemberStatic{
+		Title:     make([]string, 0),
+		Legend:    make([]string, 0),
+		YAxisData: make(map[string][]int, 0),
+	}
+
+	// 绩效等级
+	kpiList, err := boot.CrewKpiRuleServer.GetAll(ctx, &inspirit.GetAllCrewKpiRuleReq{})
+	if err != nil || len(kpiList.GetData()) == 0 {
+		return resData, err
+	}
+	for _, v := range kpiList.GetData() {
+		resData.Title = append(resData.Title, v.LevelName)
+	}
+
+	// 项目
+	productList, err := dao.Product.GetAll(ctx, model.ProductWhere{})
+	if err != nil || len(productList) == 0 {
+		return resData, err
+	}
+	for _, sv := range productList {
+		resData.Legend = append(resData.Legend, sv.Name)
+	}
+
+	for _, sv := range productList {
+		kpiCount := make([]int, 0)
+		for _, v := range kpiList.GetData() {
+			memberKpiCount, err := dao.ProductMemberKpi.Ctx(ctx).Where(dao.ProductMemberKpi.Columns().KpiLevelId, v.Id).WhereIn(dao.ProductMemberKpi.Columns().ProId, sv.Id).Count()
+			if err != nil {
+				return resData, err
+			}
+			kpiCount = append(kpiCount, memberKpiCount)
+		}
+		// X轴坐标
+		resData.YAxisData[sv.Name] = kpiCount
+	}
+
+	return resData, nil
 }

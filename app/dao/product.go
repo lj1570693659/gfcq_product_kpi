@@ -37,7 +37,7 @@ var (
 
 // Fill with you ideas below.
 
-func (s *productDao) GetList(ctx context.Context, in model.ProductWhere, page, size int32) (res *response.GetListResponse, productEntity []model.Product, err error) {
+func (s *productDao) GetList(ctx context.Context, in *model.ProductApiGetListReq) (res *response.GetListResponse, productEntity []model.Product, err error) {
 	res = &response.GetListResponse{}
 	productEntity = make([]model.Product, 0)
 	query := s.Ctx(ctx)
@@ -74,7 +74,7 @@ func (s *productDao) GetList(ctx context.Context, in model.ProductWhere, page, s
 		query = query.WhereIn(s.Columns().Status, in.PmId)
 	}
 
-	query, totalSize, page, size, err := util.GetListWithPage(query, page, size)
+	query, totalSize, page, size, err := util.GetListWithPage(query, in.Page, in.Size)
 	if err != nil {
 		return res, productEntity, err
 	}

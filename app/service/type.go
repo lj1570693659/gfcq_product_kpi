@@ -5,6 +5,7 @@ import (
 	"github.com/gogf/gf/util/gconv"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/boot"
+	"github.com/lj1570693659/gfcq_product_kpi/library/util"
 	v1 "github.com/lj1570693659/gfcq_protoc/config/product/v1"
 )
 
@@ -24,8 +25,36 @@ func (s *typeService) GetAll(ctx context.Context, input *model.ProductType) (*v1
 	return res, err
 }
 
+// Create 新增项目阶段信息列表
+func (s *typeService) Create(ctx context.Context, input *model.TypeApiChangeReq) (*v1.CreateTypeRes, error) {
+	res, err := boot.TypeServer.Create(ctx, &v1.CreateTypeReq{
+		Name:   input.Name,
+		Remark: input.Remark,
+	})
+	return res, err
+}
+
+// Modify 新增项目阶段信息列表
+func (s *typeService) Modify(ctx context.Context, input *model.TypeApiChangeReq) (*v1.ModifyTypeRes, error) {
+	res, err := boot.TypeServer.Modify(ctx, &v1.ModifyTypeReq{
+		Name:   input.Name,
+		Remark: input.Remark,
+		Id:     gconv.Int32(input.ID),
+	})
+	return res, err
+}
+
+// Delete 新增项目阶段信息列表
+func (s *typeService) Delete(ctx context.Context, input *model.TypeApiDeleteReq) (*v1.DeleteTypeRes, error) {
+	res, err := boot.TypeServer.Delete(ctx, &v1.DeleteTypeReq{
+		Id: gconv.Int32(input.ID),
+	})
+	return res, err
+}
+
 // GetStageAll 获取项目阶段信息列表
-func (s *typeService) GetStageAll(ctx context.Context, input *model.ProductModeStage) (*v1.GetAllModeStageRes, error) {
+func (s *typeService) GetStageAll(ctx context.Context, input *model.ProductModeStage) ([]model.GetStage, error) {
+	resData := make([]model.GetStage, 0)
 	res, err := boot.ModeStageServer.GetAll(ctx, &v1.GetAllModeStageReq{
 		ModeStage: &v1.ModeStageInfo{
 			Name:       input.Name,
@@ -34,7 +63,35 @@ func (s *typeService) GetStageAll(ctx context.Context, input *model.ProductModeS
 			QuotaRadio: gconv.Float32(input.QuotaRadio),
 		},
 	})
-	return res, err
+
+	typeLists, err := boot.TypeServer.GetAll(ctx, &v1.GetAllTypeReq{})
+	if err != nil {
+		return resData, err
+	}
+	if len(res.Data) > 0 {
+		for _, v := range res.Data {
+			info := model.GetStage{
+				ProductModeStage: model.ProductModeStage{
+					Id:         gconv.Uint(v.Id),
+					Tid:        gconv.Uint(v.Tid),
+					Name:       v.Name,
+					QuotaRadio: util.Decimal(gconv.Float64(v.QuotaRadio)),
+					Remark:     v.Remark,
+				},
+			}
+			for _, tv := range typeLists.GetData() {
+				if v.GetTid() == tv.GetId() {
+					info.ProductType = model.ProductType{
+						Id:     gconv.Uint(tv.Id),
+						Name:   tv.Name,
+						Remark: tv.Remark,
+					}
+				}
+			}
+			resData = append(resData, info)
+		}
+	}
+	return resData, err
 }
 
 // CreateModeStage 新增项目阶段信息列表

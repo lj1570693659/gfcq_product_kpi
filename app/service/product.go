@@ -28,7 +28,7 @@ type productService struct{}
 func (s *productService) GetList(ctx context.Context, in *model.ProductApiGetListReq) (res *response.GetListResponse, err error) {
 	res = &response.GetListResponse{}
 	resData := make([]model.GetProduct, 0)
-	productList, productEntity, err := dao.Product.GetList(ctx, in.Product, in.Page, in.Size)
+	productList, productEntity, err := dao.Product.GetList(ctx, in)
 	if err != nil {
 		return res, err
 	}
@@ -83,6 +83,13 @@ func (s *productService) GetList(ctx context.Context, in *model.ProductApiGetLis
 	res.TotalSize = productList.TotalSize
 	res.Data = resData
 	return res, nil
+}
+
+// GetAll 项目筛选清单
+func (s *productService) GetAll(ctx context.Context, in model.ProductWhere) (res []model.Product, err error) {
+	res, err = dao.Product.GetAll(ctx, in)
+
+	return res, err
 }
 
 func (s *productService) GetOne(ctx context.Context, in *model.ProductApiGetOneReq) (res model.Product, err error) {

@@ -13,6 +13,7 @@ ENV WORKDIR /app/main
 ADD ./main   $WORKDIR/main
 ADD ./config/config.toml   $WORKDIR/config/config.toml
 ADD ./document/auth/model.conf   $WORKDIR/document/auth/model.conf
+ADD ./public/excel/   $WORKDIR/public/excel/
 RUN chmod +x $WORKDIR/main
 RUN chmod +x $WORKDIR/config/config.toml
 RUN chmod +x $WORKDIR/document/auth/model.conf

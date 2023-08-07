@@ -145,49 +145,26 @@ func (s *productMemberPrizeService) MemberBaseIndexChange(ctx context.Context, i
 
 // PmBaseIndexChange 更新项目经理基准指数
 func (s *productMemberPrizeService) PmBaseIndexChange(ctx context.Context, in *model.ProductMemberKpi) (err error) {
-	//prize := &model.ProductMemberPrize{
-	//	ProEmpId:      in.ProEmpId,
-	//	ProId:         in.ProId,
-	//	ProStageId:    in.ProStageId,
-	//	OvertimeRadio: in.OvertimeRadio,
-	//	KpiLevel:      in.KpiLevel,
-	//	KpiRadio:      in.KpiRadio,
-	//	FloatRaio:     in.FloatRaio,
-	//}
 	// 项目经理奖金分配数据完善
 	productStageKpi, err := dao.ProductStageKpi.GetOne(ctx, &model.ProductStageKpi{ProId: in.ProId, StageId: in.ProStageId})
 	if err != nil {
 		return err
 	}
-	// 项目成员表中暂无PM信息
-	//product, err := dao.Product.GetOne(ctx, model.Product{Id: in.ProId})
-	//if err != nil {
-	//	return err
-	//}
-	// 查询员工工号
-	//empInfo, err := boot.EmployeeServer.GetOne(ctx, &common.GetOneEmployeeReq{Id: gconv.Int32(product.PmId)})
-	//if err != nil {
-	//	return err
-	//}
 
 	// 项目组绩效数据完善
 	pmMemberInfo, err := dao.ProductMember.GetOne(ctx, model.ProductMember{ProId: in.ProId, IsSpecial: consts.IsPm})
 	if err != nil && err.Error() != sql.ErrNoRows.Error() {
 		return err
 	}
-	//if g.IsEmpty(pmMemberInfo.Id) {
-	//	pmMemberInfo, err = ProductMember.Create(ctx, &model.ProductMemberApiChangeReq{
-	//		ProId:      in.ProId,
-	//		WorkNumber: empInfo.GetEmployee().GetWorkNumber(),
-	//		PrName:     "项目经理",
-	//	})
-	//	if err != nil {
-	//		return err
-	//	}
-	//}
 
-	// 项目经理ID
-	getPmPrize, err := dao.ProductMemberPrize.Create(ctx, &model.ProductMemberPrize{
+	getPmPrize, err := dao.ProductMemberPrize.GetOne(ctx, model.ProductMemberPrize{
+		ProId:      in.ProId,
+		ProStageId: in.ProStageId,
+		IsPm:       consts.IsPm,
+	})
+
+	data := &model.ProductMemberPrize{
+		Id:             getPmPrize.Id,
 		ProId:          in.ProId,
 		IsPm:           consts.IsPm,
 		ProEmpId:       pmMemberInfo.Id,
@@ -205,52 +182,18 @@ func (s *productMemberPrizeService) PmBaseIndexChange(ctx context.Context, in *m
 		KpiLevel:       productStageKpi.PmKpiLevelName,
 		KpiRadio:       productStageKpi.PmKpiLevelRadio,
 		SentQueto:      productStageKpi.PmIncentiveQuota,
-	})
-	fmt.Println("getPmPrize--------------", getPmPrize)
-	if err != nil {
-		return err
 	}
-
-	// 1：项目组成员
-	// 基准指数、权重基准（自动）、权重基准（PMO）、发放基数、剩余额度、实发额度
-	// 工时指数
-	//overtimeIndex, err := s.getHoursIndexByRadio(ctx, gconv.Float32(in.OvertimeRadio))
-	//if err != nil {
-	//	return err
-	//}
-	//prize.OvertimeIndex = gconv.Uint(overtimeIndex)
-	// 管理指数
-	//memberInfo, err := dao.ProductMember.GetOne(ctx, model.ProductMember{Id: in.ProEmpId})
-	//if err != nil {
-	//	return err
-	//}
-	//// 责任指数
-	//prize.DutyIndex = gconv.Uint(memberInfo.DutyIndex)
-	//prize.ManageIndex = memberInfo.ManageIndex
-	//prize.PrId = memberInfo.PrId
-	//prize.PrName = memberInfo.PrName
-	//prize.JbId = memberInfo.JbId
-	//prize.JbName = memberInfo.JbName
-	//
-	//// 基准指数
-	//prize.BaseIndex = gconv.Float64(prize.DutyIndex)*DutyIndexRadio + gconv.Float64(prize.ManageIndex)*ManageIndexRadio + gconv.Float64(prize.OvertimeIndex)*HoursIndexRadio
-	//
-	//info, err := dao.ProductMemberPrize.GetOne(ctx, model.ProductMemberPrize{
-	//	ProId:      in.ProId,
-	//	ProEmpId:   in.ProEmpId,
-	//	ProStageId: in.ProStageId,
-	//})
-	//
-	//if err != nil && err.Error() != sql.ErrNoRows.Error() {
-	//	return err
-	//}
-	//prize.Id = in.Id
-	//prize.IsPm = consts.IsPm
-	//if g.IsEmpty(info.Id) {
-	//	_, err = dao.ProductMemberPrize.Create(ctx, prize)
-	//} else {
-	//	_, err = dao.ProductMemberPrize.Modify(ctx, prize)
-	//}
+	fmt.Println("pm.data----------------", data)
+	fmt.Println("pm.getPmPrize----------------", getPmPrize)
+	fmt.Println("pm.productStageKpi----------------", productStageKpi)
+	if g.IsEmpty(getPmPrize.Id) {
+		getPmPrize, err = dao.ProductMemberPrize.Create(ctx, data)
+		if err != nil {
+			return err
+		}
+	} else {
+		getPmPrize, err = dao.ProductMemberPrize.Modify(ctx, data)
+	}
 	return err
 }
 
@@ -265,13 +208,13 @@ func (s *productMemberPrizeService) getHoursIndexByRadio(ctx context.Context, ov
 
 // Compute 计算成员奖金
 func (s *productMemberPrizeService) Compute(ctx context.Context, in *model.ProductMemberPrizeComputeReq) (err error) {
-	// 项目经理奖金分配数据完善
+	// 项目经理奖金分配数据查询
 	productStageKpi, err := dao.ProductStageKpi.GetOne(ctx, &model.ProductStageKpi{ProId: in.ProId, StageId: in.StageId})
 	if err != nil {
 		return err
 	}
 
-	// 项目组奖金数据完善
+	// 项目组奖金数据查询
 	getPmPrize := &model.ProductMemberPrize{}
 	getPmPrize, err = dao.ProductMemberPrize.GetOne(ctx, model.ProductMemberPrize{ProId: in.ProId, ProStageId: in.StageId, IsPm: consts.IsPm})
 	if err != nil && err.Error() != sql.ErrNoRows.Error() {

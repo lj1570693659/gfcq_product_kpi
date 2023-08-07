@@ -2,7 +2,6 @@ package api
 
 import (
 	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/app/service"
 	"github.com/lj1570693659/gfcq_product_kpi/library/response"
@@ -87,9 +86,9 @@ func (a *productMemberKpiApi) Modify(r *ghttp.Request) {
 		response.JsonExit(r, response.FormatFailProductMemberKpi, err.Error())
 	}
 
-	if g.IsEmpty(input.ID) {
-		response.JsonExit(r, response.FormatFailProductMemberKpi, "编辑对象数据丢失")
-	}
+	//if g.IsEmpty(input.ID) {
+	//	response.JsonExit(r, response.FormatFailProductMemberKpi, "编辑对象数据丢失")
+	//}
 
 	err := service.ProductMemberKpi.Modify(r.Context(), input)
 	if err != nil {

@@ -14,6 +14,7 @@ func init() {
 		group.Middleware(
 			service.Middleware.Ctx,
 			service.Middleware.CORS,
+			service.Middleware.SaveUserLog,
 		)
 
 		// 系统管理
@@ -23,6 +24,13 @@ func init() {
 				// 个人资料、修改密码、日志 TODO
 				// 登录账号相关
 				sga.ALL("/user", api.User)
+
+				// 操作日志管理
+				sga.Group("/log", func(lsg *ghttp.RouterGroup) {
+					// 清单
+					lsg.GET("/lists", api.User.GetUserLogLists)
+
+				})
 			})
 			// 组织管理 TODO
 			sg.Group("/organize", func(sgo *ghttp.RouterGroup) {
@@ -98,6 +106,9 @@ func init() {
 				// 项目类型
 				cgp.Group("/type", func(tgp *ghttp.RouterGroup) {
 					tgp.GET("/all", api.Type.GetAll)
+					tgp.POST("/create", api.Type.Create)
+					tgp.PUT("/modify", api.Type.Modify)
+					tgp.DELETE("/delete", api.Type.Delete)
 				})
 				// 项目阶段
 				cgp.Group("/stage", func(stgp *ghttp.RouterGroup) {
@@ -199,6 +210,9 @@ func init() {
 				// 阶段团队成员关键事件
 				agp.Group("/crucial", func(cgp *ghttp.RouterGroup) {
 					cgp.GET("/lists", api.ProductMemberKey.GetList)
+					cgp.POST("/create", api.ProductMemberKey.Create)
+					cgp.PUT("/modify", api.ProductMemberKey.Modify)
+					cgp.DELETE("/delete", api.ProductMemberKey.Delete)
 				})
 				// 阶段团队成员激励计算
 				agp.Group("/prize", func(apgp *ghttp.RouterGroup) {
@@ -219,6 +233,7 @@ func init() {
 			// 清单、详情
 			pg.Middleware(service.Middleware.LoggedIn, service.Middleware.Role, service.Middleware.BusinessRole)
 			pg.GET("/lists", api.Product.GetList)
+			pg.GET("/all", api.Product.GetAll)
 			pg.GET("/info", api.Product.GetOne)
 			pg.GET("/detail", api.Product.GetDetail)
 			pg.POST("/create", api.Product.Create)
@@ -257,6 +272,10 @@ func init() {
 				sumg.GET("/stage", api.StatisticsSummation.GetProductStage)
 				sumg.GET("/score", api.StatisticsSummation.GetProductStageScore)
 				sumg.GET("/top", api.StatisticsSummation.GetProductStageTop)
+			})
+			// 绩效等级
+			sg.Group("/level", func(sumg *ghttp.RouterGroup) {
+				sumg.GET("/index", api.StatisticsSummation.GetProductMemberLevel)
 			})
 		})
 	})

@@ -47,11 +47,11 @@ type CrewHoursIndexApiDeleteReq struct {
 
 // CrewDutyIndexApiChangeReq 责任指数预算信息变更
 type CrewDutyIndexApiChangeReq struct {
-	ID         int    `json:"id"`                                                 // 主键
-	ScoreIndex int    `v:"required|min:0#责任指数不能为空|责任指数大于等于0" json:"scoreIndex"`   // 职责指数
-	JobLevelId uint   `v:"required|min:0#职级不能为空|请选择对应职级" json:"jobLevelId"`       // 职级ID
-	Arith      uint   `v:"required|in:1,2,3,4,5,6#运算方式不能为空|请选择运算方式" json:"arith"` // 运算方式
-	Remark     string `json:"remark"`                                             // 预留备注说明信息
+	ID         int    `json:"id"`                                                          // 主键
+	ScoreIndex int    `v:"required|min:0#责任指数不能为空|责任指数大于等于0" json:"scoreIndex"`            // 职责指数
+	JobLevelId uint   `v:"required|min:0#职级不能为空|请选择对应职级" json:"jobLevelId"`                // 职级ID
+	Arith      string `v:"required|in:eq,gt,lt,egt,elt,neq#运算方式不能为空|请选择运算方式" json:"arith"` // 运算方式
+	Remark     string `json:"remark"`                                                      // 预留备注说明信息
 }
 
 // CrewDutyIndexApiAll 责任指数预算信息变更
@@ -80,12 +80,12 @@ type CrewSolveRuleApiDeleteReq struct {
 
 // CrewOvertimeRuleApiChangeReq 加班贡献信息变更
 type CrewOvertimeRuleApiChangeReq struct {
-	ID         int     `json:"id"`                                                                    // 主键
-	ScoreMin   float64 `v:"required|min:0#工时占比下限不能为空|工时占比下限大于等于0" json:"scoreMin"`                    // 得分下限
-	ScoreMax   float64 `v:"required|max:100#工时占比上限不能为空|工时占比上限小于等于100" json:"scoreMax"`                // 得分上线
-	Redio      float64 `v:"required#浮动比例不能为空" json:"redio"`                                           // 浮动比例
-	ScoreRange uint    `v:"required|in:1,2,3#评分区间包含关系不能为空|评分区间包含关系有左闭右开、左开右闭、左闭右闭" json:"scoreRange"` // 得分区间包含关系（1：左闭右开，2：左开右闭,3:左闭右闭）
-	Remark     string  `json:"remark"`                                                                // 预留备注说明信息
+	ID         int     `json:"id"`                                                                            // 主键
+	ScoreMin   float64 `v:"required|float|min:0#加班贡献比例下限不能为空|请输入数据格式的加班贡献比例|加班贡献比例下限大于等于0" json:"scoreMin"`   // 得分下限
+	ScoreMax   float64 `v:"required|float|max:1.0#加班贡献比例上限不能为空|请输入数据格式的加班贡献比例|加班贡献比例上限小于等于1" json:"scoreMax"` // 得分上线
+	Redio      float64 `v:"required|float#浮动比例不能为空|请输入数据格式的浮动比例" json:"redio"`                                // 浮动比例
+	ScoreRange uint    `v:"required|in:1,2,3#评分区间包含关系不能为空|评分区间包含关系有左闭右开、左开右闭、左闭右闭" json:"scoreRange"`         // 得分区间包含关系（1：左闭右开，2：左开右闭,3:左闭右闭）
+	Remark     string  `json:"remark"`                                                                        // 预留备注说明信息
 }
 
 // CrewOvertimeRuleApiDeleteReq 删除加班贡献预算信息

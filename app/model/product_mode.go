@@ -40,10 +40,23 @@ type ProductRolesApiGetList struct {
 	Name       string                   `json:"name"       ` //
 	Pid        uint                     `json:"pid"        ` // 上级角色
 	Explain    string                   `json:"explain"    ` // 角色与职责说明
+	Remark     string                   `json:"remark"    `  // 角色与职责说明
 	ChildLevel []ProductRolesApiGetList `json:"childLevel"`  // 子级评估信息
 }
 
 // ProductRolesApiDeleteReq 删除项目等级评估信息
 type ProductRolesApiDeleteReq struct {
+	ID string `v:"required|integer#删除数据源不能为空|删除数据源错误" json:"id"` // 主键
+}
+
+// TypeApiChangeReq 研发模式信息变更
+type TypeApiChangeReq struct {
+	ID     int    `json:"id"`                                                           // 主键
+	Name   string `v:"required|length:2,16#研发模式名称不能为空|研发模式名称长度应当在:2到:16之间" json:"name"` // 研发模式名称
+	Remark string `json:"remark"`                                                       // 预留备注信息
+}
+
+// TypeApiDeleteReq 删除研发模式信息
+type TypeApiDeleteReq struct {
 	ID string `v:"required|integer#删除数据源不能为空|删除数据源错误" json:"id"` // 主键
 }

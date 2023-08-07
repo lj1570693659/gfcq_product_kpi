@@ -27,9 +27,14 @@ type ProductWhere struct {
 
 // ProductApiGetListReq 项目清单
 type ProductApiGetListReq struct {
-	Page    int32        `json:"page"`    // 员工姓名
-	Size    int32        `json:"size"`    // 员工姓名
-	Product ProductWhere `json:"product"` // 员工姓名
+	ProductWhere
+	Page int32 `json:"page"` // 员工姓名
+	Size int32 `json:"size"` // 员工姓名
+}
+
+type GetStage struct {
+	ProductModeStage ProductModeStage `json:"productModeStage"`
+	ProductType      ProductType      `json:"productType"`
 }
 
 // GetProduct 项目清单中关联信息

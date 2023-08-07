@@ -16,6 +16,7 @@ const (
 	NotSyncEmployee    = 201
 	FormatFailEmployee = 202
 	CreateFailEmployee = 203
+	CreateFailLog      = 204
 
 	DepartmentFailEmployee = 3002
 	JobLevelFailEmployee   = 3012

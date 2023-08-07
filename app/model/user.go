@@ -5,11 +5,13 @@
 package model
 
 import (
+	"github.com/lj1570693659/gfcq_product_kpi/app/model/entity"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model/internal"
 )
 
 // User is the golang structure for table user.
 type User internal.User
+type UserLog entity.UserLog
 
 // UserApiSignUpReq 注册请求参数，用于前后端交互参数格式约定
 type UserApiSignUpReq struct {
@@ -42,4 +44,19 @@ type UserServiceSignUpReq struct {
 	UserName   string
 	CreateTime string
 	UpdateTime string
+}
+
+// UserApiChangePwdReq 修改密码，用于前后端交互参数格式约定
+type UserApiChangePwdReq struct {
+	WorkNumber string `v:"required|length:6,16#账号不能为空|账号长度应当在:min到:max之间" json:"workNumber"`
+	Password   string `v:"required|length:6,16#请输入确认密码|密码长度应当在:min到:max之间" json:"password"`
+	Password2  string `v:"required|length:6,16|same:Password#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等" json:"password2"`
+	UserName   string `json:"userName"`
+}
+
+// UserLogApiReq 修改密码，用于前后端交互参数格式约定
+type UserLogApiReq struct {
+	UserLog
+	Page int32 `json:"page"` // 员工姓名
+	Size int32 `json:"size"` // 员工姓名
 }

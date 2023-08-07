@@ -162,36 +162,40 @@ func (s *productMemberKpiService) Import(ctx context.Context, in *model.ProductM
 	err = s.saveProductMemberKpiFromExcel(ctx, saveDataFormat)
 
 	// 同步项目经理数据
+	s.SyncPmKpi(ctx, in.ProId, in.StageId)
+	return err
+}
+
+// SyncPmKpi 同步项目经理绩效数据
+func (s *productMemberKpiService) SyncPmKpi(ctx context.Context, proId, stageId uint) error {
 	proPmKpi, err := dao.ProductMemberKpi.GetOne(ctx, model.ProductMemberKpi{
-		ProId:      in.ProId,
-		ProStageId: in.StageId,
+		ProId:      proId,
+		ProStageId: stageId,
 		IsPm:       consts.IsPm,
 	})
-	fmt.Println("proPmKpi------------", proPmKpi)
-	fmt.Println("proPmKpi-err-----------", err)
+
 	if err != nil && err.Error() != sql.ErrNoRows.Error() {
 		return err
 	}
-	fmt.Println("proPmKpi------------", proPmKpi)
-	if g.IsEmpty(proPmKpi.Id) {
-		checkInput, pmInput, getStageKpiInfo, err := s.checkInputData(ctx, model.ProductMemberKpiChangeReq{
-			ProId:      in.ProId,
-			ProStageId: in.StageId,
-			IsPm:       consts.IsPm,
-		})
-		if err != nil || !checkInput {
-			return err
-		}
-		s.saveProductMemberKpi(ctx, model.ProductMemberKpiChangeReq{
-			ProId:         in.ProId,
-			IsPm:          consts.IsPm,
-			ProStageId:    in.StageId,
-			WorkNumber:    pmInput.WorkNumber,
-			OvertimeRadio: 0,
-			FloatRaio:     getStageKpiInfo.PmFloatRadio,
-			KpiLevel:      getStageKpiInfo.PmKpiLevelName,
-		})
+
+	checkInput, pmInput, getStageKpiInfo, err := s.checkInputData(ctx, model.ProductMemberKpiChangeReq{
+		ProId:      proId,
+		ProStageId: stageId,
+		IsPm:       consts.IsPm,
+	})
+	if err != nil || !checkInput {
+		return err
 	}
+	err = s.saveProductMemberKpi(ctx, model.ProductMemberKpiChangeReq{
+		ID:            proPmKpi.Id,
+		ProId:         proId,
+		ProStageId:    stageId,
+		IsPm:          consts.IsPm,
+		WorkNumber:    pmInput.WorkNumber,
+		OvertimeRadio: 0,
+		FloatRaio:     getStageKpiInfo.PmFloatRadio,
+		KpiLevel:      getStageKpiInfo.PmKpiLevelName,
+	})
 	return err
 }
 
@@ -291,6 +295,10 @@ func (s *productMemberKpiService) saveProductMemberKpi(ctx context.Context, in m
 		ProEmpId:   info.ProEmpId,
 		ProStageId: in.ProStageId,
 	})
+
+	fmt.Println("saveProductMemberKpi.info-----------------", info)
+	fmt.Println("saveProductMemberKpi.in-----------------", in)
+	fmt.Println("saveProductMemberKpi-----------------", proMemKpi)
 
 	if err != nil && err.Error() != sql.ErrNoRows.Error() {
 		return err

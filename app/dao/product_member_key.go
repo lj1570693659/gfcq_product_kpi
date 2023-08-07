@@ -57,6 +57,36 @@ func (s *productMemberKeyDao) Create(ctx context.Context, in *model.ProductMembe
 	return in, nil
 }
 
+// Modify 编辑项目基础数据
+func (s *productMemberKeyDao) Modify(ctx context.Context, in *model.ProductMemberKey) (*model.ProductMemberKey, error) {
+	data := do.ProductMemberKey{}
+	input, _ := json.Marshal(in)
+	err := json.Unmarshal(input, &data)
+	if err != nil {
+		return in, err
+	}
+
+	if g.IsEmpty(data.HappenTime) {
+		data.HappenTime = data.CreateTime
+	}
+	data.UpdateTime = gtime.Now()
+	_, err = s.Ctx(ctx).Where(s.Columns().Id, in.Id).Data(data).Update()
+	if err != nil {
+		return in, err
+	}
+
+	return in, nil
+}
+
+func (s *productMemberKeyDao) Delete(ctx context.Context, id uint) (bool, error) {
+	_, err := s.Ctx(ctx).Where(s.Columns().Id, id).Delete()
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 func (s *productMemberKeyDao) GetList(ctx context.Context, in model.ProductMemberKeyListsReq) (res *response.GetListResponse, entity []model.ProductMemberKey, err error) {
 	res = &response.GetListResponse{}
 	entity = make([]model.ProductMemberKey, 0)
@@ -91,4 +121,34 @@ func (s *productMemberKeyDao) GetList(ctx context.Context, in model.ProductMembe
 	res.TotalSize = totalSize
 	res.Data = entity
 	return res, entity, nil
+}
+
+func (s *productMemberKeyDao) GetOne(ctx context.Context, in model.ProductMemberKey) (entity model.ProductMemberKey, err error) {
+	entity = model.ProductMemberKey{}
+	query := s.Ctx(ctx)
+	// 项目名称
+	if in.StageKpiId > 0 {
+		query = query.Where(s.Columns().StageKpiId, in.StageKpiId)
+	}
+
+	if in.ProStageId > 0 {
+		query = query.Where(s.Columns().ProStageId, in.ProStageId)
+	}
+	// 项目简称
+	if in.ProId > 0 {
+		query = query.Where(s.Columns().ProId, in.ProId)
+	}
+	// 项目经理投入程度
+	if in.ProEmpId > 0 {
+		query = query.Where(s.Columns().ProEmpId, in.ProEmpId)
+	}
+	if in.Id > 0 {
+		query = query.Where(s.Columns().Id, in.Id)
+	}
+
+	if err = query.Scan(&entity); err != nil {
+		return entity, err
+	}
+
+	return entity, nil
 }

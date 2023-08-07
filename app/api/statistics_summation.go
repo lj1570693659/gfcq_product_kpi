@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/gogf/gf/net/ghttp"
+	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/app/service"
 	"github.com/lj1570693659/gfcq_product_kpi/library/response"
 )
@@ -79,6 +80,27 @@ func (a *statisticsSummationApi) GetProductStageScore(r *ghttp.Request) {
 // @success 200 {object} response.JsonResponse "执行结果"
 func (a *statisticsSummationApi) GetProductStageTop(r *ghttp.Request) {
 	res, err := service.StatisticsSummation.GetProductStageTop(r.Context())
+	if err != nil {
+		response.JsonExit(r, response.CreateFailEmployee, err.Error())
+	} else {
+		response.JsonExit(r, response.Success, "ok", res)
+	}
+}
+
+// GetProductMemberLevel SignUp @summary 绩效等级统计
+// @tags    总量统计
+// @produce json
+// @param   entity  body model.ProductRolesApiGetListReq true "注册请求"
+// @router   /statistics/level/index [GET]
+// @success 200 {object} response.JsonResponse "执行结果"
+func (a *statisticsSummationApi) GetProductMemberLevel(r *ghttp.Request) {
+	var input *model.ProductMemberStaticWhere
+
+	if err := r.Parse(&input); err != nil {
+		response.JsonExit(r, response.FormatFailEmployee, err.Error())
+	}
+
+	res, err := service.StatisticsSummation.GetProductMemberLevel(r.Context(), input)
 	if err != nil {
 		response.JsonExit(r, response.CreateFailEmployee, err.Error())
 	} else {

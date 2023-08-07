@@ -34,6 +34,28 @@ func (a *productApi) GetList(r *ghttp.Request) {
 
 }
 
+// GetAll SignUp @summary 项目筛选清单
+// @tags    项目管理
+// @produce json
+// @param   entity  body model.ProductApiGetListReq true "项目清单"
+// @router  /product/all [GET]
+// @success 200 {object} response.JsonResponse "项目清单"
+func (a *productApi) GetAll(r *ghttp.Request) {
+	var input model.ProductWhere
+
+	if err := r.Parse(&input); err != nil {
+		response.JsonExit(r, response.FormatFailProduct, err.Error())
+	}
+
+	res, err := service.Product.GetAll(r.Context(), input)
+	if err != nil {
+		response.JsonExit(r, response.GetListFailProduct, err.Error())
+	} else {
+		response.JsonExit(r, response.Success, "ok", res)
+	}
+
+}
+
 // GetOne @summary 项目主信息详情
 // @tags    项目管理
 // @produce json

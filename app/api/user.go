@@ -94,3 +94,44 @@ func (a *userApi) SignOut(r *ghttp.Request) {
 func (a *userApi) Profile(r *ghttp.Request) {
 	response.JsonExit(r, response.Success, "", service.User.GetProfile(r.Context()))
 }
+
+// ChangePwd @summary 修改密码
+// @tags    用户服务
+// @produce json
+// @router  /system/account/user/change [PUT]
+// @success 200 {object} model.User "用户信息"
+func (a *userApi) ChangePwd(r *ghttp.Request) {
+	var (
+		apiReq *model.UserApiChangePwdReq
+	)
+	if err := r.ParseForm(&apiReq); err != nil {
+		response.JsonExit(r, response.NotSignedIn, err.Error())
+	}
+
+	if err := service.User.ChangePwd(r.Context(), apiReq); err != nil {
+		response.JsonExit(r, response.NotSignedIn, err.Error())
+	} else {
+		response.JsonExit(r, response.Success, "ok")
+	}
+}
+
+// GetUserLogLists @summary 日志管理清单
+// @tags    用户服务
+// @produce json
+// @router  /system/account/log/lists [GET]
+// @success 200 {object} model.User "用户信息"
+func (a *userApi) GetUserLogLists(r *ghttp.Request) {
+	var (
+		apiReq *model.UserLogApiReq
+	)
+	if err := r.Parse(&apiReq); err != nil {
+		response.JsonExit(r, response.NotSignedIn, err.Error())
+	}
+
+	data, err := service.UserLog.GetList(r.Context(), apiReq)
+	if err != nil {
+		response.JsonExit(r, response.NotSignedIn, err.Error())
+	} else {
+		response.JsonExit(r, response.Success, "ok", data)
+	}
+}
