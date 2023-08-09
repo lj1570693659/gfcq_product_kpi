@@ -42,6 +42,7 @@ type UserServiceSignUpReq struct {
 	WorkNumber string
 	Password   string
 	UserName   string
+	EmployeeId int32
 	CreateTime string
 	UpdateTime string
 }

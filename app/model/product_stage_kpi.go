@@ -64,14 +64,15 @@ type ProductStageKpiInfo struct {
 // ProductStageKpiApiChangeReq 更新项目阶段绩效
 // 必传参数：阶段、阶段得分、PM分配比例、浮动贡献、绩效等级
 type ProductStageKpiApiChangeReq struct {
-	ID           uint    `json:"id"               `                                              //
-	ProId        uint    `v:"required|integer|min:1#请选择绩效对应项目|当前项目不存在|当前项目不存在" json:"proId"`     // 项目主表ID
-	StageId      uint    `v:"required|integer#请选择绩效对应项目阀点|请选择正确的项目阀点" json:"stageId"`            // 项目所处阶段（cqgf_product_stage_rule.id）
-	StageScore   uint    `v:"required|integer|min:0#请输入阶段得分阀点|得分为正整数|得分不能小于0" json:"stageScore"` // 阶段得分
-	PmRadio      float64 `v:"required|min:0#请输入项目经理分配比例|项目经理分配比例不能小于0" json:"pmRadio"`           // PM分配比例
-	PmFloatRadio float64 `v:"required|min:0#请输入项目经理浮动比例|项目经理浮动比例不能小于0" json:"pmFloatRadio"`      // PM浮动比例
-	PmKpiLevelId uint    `v:"required|min:0#请选择项目经理绩效等级|项目经理绩效等级不能小于0" json:"pmKpiLevelId"`      // PM绩效等级
-	Remark       string  `json:"remark"`                                                         // 预留备注信息
+	ID              uint    `json:"id"               `                                              //
+	ProId           uint    `v:"required|integer|min:1#请选择绩效对应项目|当前项目不存在|当前项目不存在" json:"proId"`     // 项目主表ID
+	StageId         uint    `v:"required|integer#请选择绩效对应项目阀点|请选择正确的项目阀点" json:"stageId"`            // 项目所处阶段（cqgf_product_stage_rule.id）
+	StageScore      uint    `v:"required|integer|min:0#请输入阶段得分阀点|得分为正整数|得分不能小于0" json:"stageScore"` // 阶段得分
+	PmRadio         float64 `v:"required|min:0#请输入项目经理分配比例|项目经理分配比例不能小于0" json:"pmRadio"`           // PM分配比例
+	PmFloatRadio    float64 `v:"required|min:0#请输入项目经理浮动比例|项目经理浮动比例不能小于0" json:"pmFloatRadio"`      // PM浮动比例
+	PmKpiLevelScore uint    `v:"required|min:0#请输入项目经理绩效得分|项目经理绩效得分不能小于0" json:"pmKpiLevelScore"`   // PM绩效得分
+	//PmKpiLevelId uint    `v:"required|min:0#请选择项目经理绩效等级|项目经理绩效等级不能小于0" json:"pmKpiLevelId"`      // PM绩效等级
+	Remark string `json:"remark"` // 预留备注信息
 }
 
 // ----------------------------------团队成员绩效相关数据结构--------------------------------------

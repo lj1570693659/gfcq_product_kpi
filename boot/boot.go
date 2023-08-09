@@ -1,7 +1,6 @@
 package boot
 
 import (
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/swagger"
@@ -9,6 +8,8 @@ import (
 	v1 "github.com/lj1570693659/gfcq_protoc/common/v1"
 	inspirit "github.com/lj1570693659/gfcq_protoc/config/inspirit/v1"
 	product "github.com/lj1570693659/gfcq_protoc/config/product/v1"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var (
@@ -58,11 +59,11 @@ var (
 // 用于应用初始化。
 func init() {
 	// 部门、员工基础信息服务
-	organizeServerName := g.Config("config.toml").Get("grpc.organize.name")
-	//organizeServerLink := g.Config("config.toml").Get("grpc.organize.link")
-	//grpcx.Resolver.Register(etcd.New(gconv.String(organizeServerLink)))
-	OrganizeServer := grpcx.Client.MustNewGrpcClientConn(gconv.String(organizeServerName))
-
+	organizeServerName := g.Config("config.toml").Get("grpc.organize.link")
+	OrganizeServer, err := grpc.Dial(gconv.String(organizeServerName), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		panic(err)
+	}
 	DepertmentServer = v1.NewDepartmentClient(OrganizeServer)
 	EmployeeServer = v1.NewEmployeeClient(OrganizeServer)
 	JobServer = v1.NewJobClient(OrganizeServer)
@@ -70,11 +71,8 @@ func init() {
 	EmployeeJobServer = v1.NewEmployeeJobClient(OrganizeServer)
 
 	// 公共配置服务
-	configServerName := g.Config("config.toml").Get("grpc.config.name")
-	//configServerLink := g.Config("config.toml").Get("grpc.config.link")
-	//grpcx.Resolver.Register(etcd.New(gconv.String(configServerLink)))
-	ConfigServer := grpcx.Client.MustNewGrpcClientConn(gconv.String(configServerName))
-
+	configServerName := g.Config("config.toml").Get("grpc.config.link")
+	ConfigServer, err := grpc.Dial(gconv.String(configServerName), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	LevelAssessServer = product.NewLevelAssessClient(ConfigServer)
 	LevelConfirmServer = product.NewLevelConfirmClient(ConfigServer)
 	ModeServer = product.NewModeClient(ConfigServer)

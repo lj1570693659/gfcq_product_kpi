@@ -181,14 +181,14 @@ func init() {
 				// 绩效等级
 				cgi.Group("/kpiRule", func(kgp *ghttp.RouterGroup) {
 					kgp.GET("/all", api.CrewKpiRule.GetAll)
-					//kgp.POST("/create", api.CrewOvertimeRule.Create)
-					//kgp.PUT("/modify", api.CrewOvertimeRule.Modify)
-					//kgp.DELETE("/delete", api.CrewOvertimeRule.Delete)
+					kgp.POST("/create", api.CrewKpiRule.Create)
+					kgp.PUT("/modify", api.CrewKpiRule.Modify)
+					kgp.DELETE("/delete", api.CrewKpiRule.Delete)
 				})
 			})
 		})
 
-		// 项目绩效 TODO
+		// 项目绩效
 		group.Group("/achieve", func(ag *ghttp.RouterGroup) {
 			// 阶段绩效
 			ag.Group("/product", func(agp *ghttp.RouterGroup) {

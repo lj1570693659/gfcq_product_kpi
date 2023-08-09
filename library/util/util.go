@@ -8,11 +8,10 @@ import (
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/lj1570693659/gfcq_product_kpi/app/model"
-	"github.com/lj1570693659/gfcq_product_kpi/boot"
 	"github.com/lj1570693659/gfcq_product_kpi/consts"
 	v1 "github.com/lj1570693659/gfcq_protoc/common/v1"
 	inspirit "github.com/lj1570693659/gfcq_protoc/config/inspirit/v1"
+	product "github.com/lj1570693659/gfcq_protoc/config/product/v1"
 	"strconv"
 	"strings"
 )
@@ -97,6 +96,7 @@ func GetEmployAttribute(name string) uint {
 	attributeName := map[string]uint{
 		"兼职": consts.PartTime,
 		"全职": consts.FullTime,
+		"参与": consts.PitchTime,
 	}
 	return attributeName[name]
 }
@@ -151,80 +151,66 @@ func Letter(length int) []string {
 	return str
 }
 
-// GetTreeNode 递归获取子节点
-func GetTreeNode(ctx context.Context, perms []model.DepartmentApiGetList, GroupBy, GetFiledNameCount string) (context.Context, []model.DepartmentApiGetList, string, string) {
-	//定义子节点
-	for k, v := range perms {
-		// 计算直属上级部门员工数量
-		var childCountSum int32
-		getCount, err := boot.EmployeeJobServer.GetCount(ctx, &v1.GetCountEmployeeJobReq{
-			EmployeeJob: &v1.EmployeeJobInfo{
-				DepartId: gconv.Int32(v.ID),
-			},
-			GroupBy:           GroupBy,
-			GetFiledNameCount: GetFiledNameCount,
-		})
-		if err != nil {
-			return ctx, perms, GroupBy, GetFiledNameCount
-		}
-
-		// 计算下级部门
-		getChild, err := boot.DepertmentServer.GetListWithoutPage(ctx, &v1.GetListWithoutDepartmentReq{
-			Department: &v1.DepartmentInfo{
-				Pid: gconv.Int32(v.ID),
-			},
-		})
-		if err != nil {
-			return ctx, perms, GroupBy, GetFiledNameCount
-		}
-		info := make([]model.DepartmentApiGetList, 0)
-		gconv.Scan(getChild.GetData(), &info)
-		perms[k].ChildDepart = info
-
-		if len(info) > 0 {
-			for ik, iv := range info {
-				getCount, err := boot.EmployeeJobServer.GetCount(ctx, &v1.GetCountEmployeeJobReq{
-					EmployeeJob: &v1.EmployeeJobInfo{
-						DepartId: gconv.Int32(iv.ID),
-					},
-					GroupBy:           GroupBy,
-					GetFiledNameCount: GetFiledNameCount,
-				})
-				if err != nil {
-					return ctx, perms, GroupBy, GetFiledNameCount
-				}
-				info[ik].EmployeeCount = getCount.GetCount()
-				childCountSum += getCount.GetCount()
-			}
-		}
-
-		perms[k].EmployeeCount = getCount.GetCount() + childCountSum
-		GetTreeNode(ctx, info, GroupBy, GetFiledNameCount)
-	}
-	return ctx, perms, GroupBy, GetFiledNameCount
-}
-
 func GetHoursIndexByScore(lists []*inspirit.CrewHoursIndexInfo, score float32) uint32 {
 	for _, v := range lists {
-		switch v.ScoreRange {
-		case consts.ScoreRangeMin:
-			// 左闭右开
-			if v.ScoreMin <= score && score < v.ScoreMax {
-				return v.ScoreIndex
-			}
-		case consts.ScoreRangeMax:
-			// 左开右闭
-			if v.ScoreMin < score && score <= v.ScoreMax {
-				return v.ScoreIndex
-			}
-		case consts.ScoreRangeMinAndMax:
-			// 左闭右闭
-			if v.ScoreMin <= score && score <= v.ScoreMax {
-				return v.ScoreIndex
-			}
+		if get := getIndexByScore(v.ScoreRange, v.ScoreMin, v.ScoreMax, score); get {
+			return v.ScoreIndex
 		}
 	}
 	return 0
+}
+
+func GetKpiRuleByScore(lists []*inspirit.CrewKpiRuleInfo, score uint) uint {
+	for _, v := range lists {
+		if get := getIndexByScore(v.ScoreRange, gconv.Float32(v.ScoreMin), gconv.Float32(v.ScoreMax), gconv.Float32(score)); get {
+			return gconv.Uint(v.Id)
+		}
+	}
+	return 0
+}
+
+func GetLevelAssessByScore(lists []*inspirit.BudgetAssessInfo, score uint32) *inspirit.BudgetAssessInfo {
+	for _, v := range lists {
+		if get := getIndexByScore(v.ScoreRange, gconv.Float32(v.ScoreMin), gconv.Float32(v.ScoreMax), gconv.Float32(score)); get {
+			return v
+		}
+	}
+	return &inspirit.BudgetAssessInfo{}
+}
+
+func GetLevelConfirmByScore(lists []*product.LevelConfirmInfo, score uint) *product.LevelConfirmInfo {
+	for _, v := range lists {
+		if get := getIndexByScore(v.ScoreRange, gconv.Float32(v.ScoreMin), gconv.Float32(v.ScoreMax), gconv.Float32(score)); get {
+			return v
+		}
+	}
+	return &product.LevelConfirmInfo{}
+}
+
+func getIndexByScore(scoreRange product.ScoreRangeEnum, scoreMin, scoreMax, score float32) bool {
+	switch scoreRange {
+	case consts.ScoreRangeMin:
+		// 左闭右开
+		if scoreMin <= score && score < scoreMax {
+			return true
+		}
+	case consts.ScoreRangeMax:
+		// 左开右闭
+		if scoreMin < score && score <= scoreMax {
+			return true
+		}
+	case consts.ScoreRangeMinAndMax:
+		// 左闭右闭
+		if scoreMin <= score && score <= scoreMax {
+			return true
+		}
+	case consts.NotIncludeMinMax:
+		// 左右开口
+		if scoreMin < score && score < scoreMax {
+			return true
+		}
+	}
+	return false
 }
 
 func GetUserRequestTypeName(methodName uint, requestModuleLists []string) string {

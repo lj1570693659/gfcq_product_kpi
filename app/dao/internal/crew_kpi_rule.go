@@ -22,6 +22,9 @@ type CrewKpiRuleDao struct {
 type CrewKpiRuleColumns struct {
 	Id         string //
 	Redio      string // 比例
+	ScoreMin   string // 得分下限
+	ScoreMax   string // 得分上线
+	ScoreRange string // 得分区间包含关系（1：左闭右开，2：左开右闭）
 	LevelName  string // 等级名称
 	Remark     string // 预留备注说明信息
 	CreateTime string // 新增数据时间
@@ -32,6 +35,9 @@ type CrewKpiRuleColumns struct {
 var crewKpiRuleColumns = CrewKpiRuleColumns{
 	Id:         "id",
 	Redio:      "redio",
+	ScoreMin:   "score_min",
+	ScoreMax:   "score_max",
+	ScoreRange: "score_range",
 	LevelName:  "level_name",
 	Remark:     "remark",
 	CreateTime: "create_time",

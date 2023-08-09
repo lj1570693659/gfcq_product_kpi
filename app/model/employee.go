@@ -59,10 +59,12 @@ type EmployeeApiGetOneRes struct {
 	StatusName     string              `json:"statusName"`     // 性别-中文显示
 	JobInfo        []entity.Job        `json:"jobInfo"`        // 员工岗位信息
 	JobName        string              `json:"jobName"`        // 员工岗位信息
+	JobIds         []int               `json:"jobIds"`         // 员工岗位信息
 	LevelInfo      JobLevel            `json:"levelInfo"`      // 员工职级信息
 	InstructorInfo Employee            `json:"instructorInfo"` // 员工职级信息
 	DepartmentInfo []entity.Department `json:"departmentInfo"` // 员工所在部门信息
 	DepartmentName string              `json:"departmentName"` // 员工岗位信息
+	DepartmentIds  []int32             `json:"departmentIds"`  // 员工岗位信息
 	ProductInfo    []entity.Product    `json:"productInfo"`    // 员工涉及项目信息
 }
 

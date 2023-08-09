@@ -35,6 +35,7 @@ type ProductStageKpiColumns struct {
 	PmBase           string // PM发放基础
 	PmFloatRadio     string // PM浮动比例
 	PmKpiLevelId     string // PM绩效等级
+	PmKpiLevelScore  string // PM绩效得分
 	PmKpiLevelName   string // PM绩效等级名称
 	PmKpiLevelRadio  string // PM绩效等级比例
 	PmIncentiveQuota string // PM实际应发额度
@@ -60,6 +61,7 @@ var productStageKpiColumns = ProductStageKpiColumns{
 	PmBase:           "pm_base",
 	PmFloatRadio:     "pm_float_radio",
 	PmKpiLevelId:     "pm_kpi_level_id",
+	PmKpiLevelScore:  "pm_kpi_level_score",
 	PmKpiLevelName:   "pm_kpi_level_name",
 	PmKpiLevelRadio:  "pm_kpi_level_radio",
 	PmIncentiveQuota: "pm_incentive_quota",

@@ -15,6 +15,7 @@ type Product struct {
 	Id              interface{} //
 	Tid             interface{} // 项目类型（type关联表）
 	Name            interface{} // 项目名称
+	ProNumber       interface{} // 项目编号
 	SubName         interface{} // 项目简称
 	LcScore         interface{} // 优先级评分
 	LccId           interface{} // 项目优先级ID

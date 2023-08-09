@@ -66,6 +66,11 @@ func (s *productMemberService) GetList(ctx context.Context, in *model.ProductMem
 		return res, err
 	}
 
+	departList, err := boot.DepertmentServer.GetListWithoutPage(ctx, &v1.GetListWithoutDepartmentReq{})
+	if err != nil {
+		return res, err
+	}
+
 	if res.TotalSize > 0 {
 		for _, v := range dataEntity {
 			info := model.ProductMemberGetListRes{}
@@ -83,6 +88,12 @@ func (s *productMemberService) GetList(ctx context.Context, in *model.ProductMem
 				return res, err
 			}
 			info.JobLevelInfo = jobLevel.GetJobLevel()
+
+			// 直接上级 TODO
+			info.LeaderInfo, err = Employee.GetLeader(ctx, departList.GetData(), employ.GetEmployee().GetDepartId())
+			if err != nil {
+				return res, err
+			}
 
 			resData = append(resData, info)
 		}

@@ -21,8 +21,22 @@ import (
 )
 
 var ProductStageKpi = productStageKpiService{}
+var KpiRuleLists []*inspirit.CrewKpiRuleInfo
 
 type productStageKpiService struct{}
+
+// 初始化数据
+func init() {
+	ctx := context.Background()
+	res, err := boot.CrewKpiRuleServer.GetAll(ctx, &inspirit.GetAllCrewKpiRuleReq{})
+	if err != nil {
+		g.Log("config").Error(ctx, err)
+	}
+	if g.IsEmpty(res.GetData()) {
+		panic("绩效等级未配置，请先完善数据")
+	}
+	KpiRuleLists = res.GetData()
+}
 
 func (s *productStageKpiService) Create(ctx context.Context, in *model.ProductStageKpiApiChangeReq) (*model.ProductStageKpi, error) {
 	res := &model.ProductStageKpi{}
@@ -257,6 +271,10 @@ func (s *productStageKpiService) completeInputData(ctx context.Context, in *mode
 	// PM发放基础 = 团队额度 * PM分配比例
 	res.PmBase = res.CrewQuota * res.PmRadio
 	// PM绩效等级比例
+
+	// 根据PM绩效得分获取绩效等级
+	res.PmKpiLevelId = util.GetKpiRuleByScore(KpiRuleLists, res.PmKpiLevelScore)
+
 	kpiLevel, err := dao.CrewKpiRule.GetOne(ctx, model.CrewKpiRule{Id: res.PmKpiLevelId})
 	if err != nil {
 		return res, err

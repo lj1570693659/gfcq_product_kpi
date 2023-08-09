@@ -35,9 +35,56 @@ func (s *departmentService) GetList(ctx context.Context, input *model.Department
 	if len(getAll.GetData()) > 0 {
 		res = make([]model.DepartmentApiGetList, 0)
 		gconv.Scan(getAll.GetData(), &res)
-		_, res, _, _ = util.GetTreeNode(ctx, res, dao.EmployeeJob.Columns().EmployeeId, dao.EmployeeJob.Columns().EmployeeId)
+		_, res, _, _ = s.getDepartTreeNode(ctx, res, dao.EmployeeJob.Columns().EmployeeId, dao.EmployeeJob.Columns().EmployeeId)
+
 	}
 	return res, nil
+}
+
+// getDepartTreeNode 递归获取部门子节点
+func (s *departmentService) getDepartTreeNode(ctx context.Context, perms []model.DepartmentApiGetList, GroupBy, GetFiledNameCount string) (context.Context, []model.DepartmentApiGetList, string, string) {
+	for k, v := range perms {
+		// 计算直属上级部门员工数量
+		var childCountSum int32
+		getCount, err := Employee.GetEmployeeCount(ctx, gconv.Int32(v.ID))
+		if err != nil {
+			return ctx, perms, GroupBy, GetFiledNameCount
+		}
+
+		// 计算下级部门
+		getChild, err := boot.DepertmentServer.GetListWithoutPage(ctx, &v1.GetListWithoutDepartmentReq{
+			Department: &v1.DepartmentInfo{
+				Pid: gconv.Int32(v.ID),
+			},
+		})
+		if err != nil {
+			return ctx, perms, GroupBy, GetFiledNameCount
+		}
+		info := make([]model.DepartmentApiGetList, 0)
+		gconv.Scan(getChild.GetData(), &info)
+		perms[k].ChildDepart = info
+
+		if len(info) > 0 {
+			for ik, iv := range info {
+				getCount, err := boot.EmployeeJobServer.GetCount(ctx, &v1.GetCountEmployeeJobReq{
+					EmployeeJob: &v1.EmployeeJobInfo{
+						DepartId: gconv.Int32(iv.ID),
+					},
+					GroupBy:           GroupBy,
+					GetFiledNameCount: GetFiledNameCount,
+				})
+				if err != nil {
+					return ctx, perms, GroupBy, GetFiledNameCount
+				}
+				info[ik].EmployeeCount = getCount.GetCount()
+				childCountSum += getCount.GetCount()
+			}
+		}
+
+		perms[k].EmployeeCount = getCount.GetCount() + childCountSum
+		s.getDepartTreeNode(ctx, info, GroupBy, GetFiledNameCount)
+	}
+	return ctx, perms, GroupBy, GetFiledNameCount
 }
 
 // GetOne 获取部门信息详情

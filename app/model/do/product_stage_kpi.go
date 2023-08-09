@@ -27,6 +27,7 @@ type ProductStageKpi struct {
 	PmBase           interface{} // PM发放基础
 	PmFloatRadio     interface{} // PM浮动比例
 	PmKpiLevelId     interface{} // PM绩效等级
+	PmKpiLevelScore  interface{} // PM绩效得分
 	PmKpiLevelName   interface{} // PM绩效等级名称
 	PmKpiLevelRadio  interface{} // PM绩效等级比例
 	PmIncentiveQuota interface{} // PM实际应发额度

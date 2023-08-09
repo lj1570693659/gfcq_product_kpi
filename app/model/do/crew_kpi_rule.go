@@ -14,6 +14,9 @@ type CrewKpiRule struct {
 	g.Meta     `orm:"table:cqgf_crew_kpi_rule, do:true"`
 	Id         interface{} //
 	Redio      interface{} // 比例
+	ScoreMin   interface{} // 得分下限
+	ScoreMax   interface{} // 得分上线
+	ScoreRange interface{} // 得分区间包含关系（1：左闭右开，2：左开右闭）
 	LevelName  interface{} // 等级名称
 	Remark     interface{} // 预留备注说明信息
 	CreateTime *gtime.Time // 新增数据时间

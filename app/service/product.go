@@ -15,6 +15,7 @@ import (
 	"github.com/lj1570693659/gfcq_product_kpi/boot"
 	"github.com/lj1570693659/gfcq_product_kpi/consts"
 	"github.com/lj1570693659/gfcq_product_kpi/library/response"
+	"github.com/lj1570693659/gfcq_product_kpi/library/util"
 	common "github.com/lj1570693659/gfcq_protoc/common/v1"
 	inspirit "github.com/lj1570693659/gfcq_protoc/config/inspirit/v1"
 	product "github.com/lj1570693659/gfcq_protoc/config/product/v1"
@@ -170,28 +171,28 @@ func (s *productService) Create(ctx context.Context, in *model.ProductApiChangeR
 		return res, err
 	}
 
-	//data := &entity.Product{}
-	//input, _ := json.Marshal(in)
-	//err = json.Unmarshal(input, &data)
-	//if err != nil {
-	//	return res, err
-	//}
-	//err = dao.Product.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
-	//	res, err = dao.Product.Create(ctx, data)
-	//
-	//	// 项目阶段占比个性化配置
-	//	err = ProductStageRule.CreateDefault(ctx, in.Tid, res.Id)
-	//
-	//	// 查询项目当前自由阶段
-	//	stageInfo, err := dao.ProductStageRule.GetOne(ctx, &model.ProductStageRule{ProId: res.Id, ProStageId: in.ProTypeStageId})
-	//	if err != nil {
-	//		return err
-	//	}
-	//	// 更新项目个性化阶段定制信息
-	//	data.ProTypeStageId = stageInfo.Id
-	//	_, err = dao.Product.Modify(ctx, data)
-	//	return err
-	//})
+	data := &entity.Product{}
+	input, _ := json.Marshal(in)
+	err = json.Unmarshal(input, &data)
+	if err != nil {
+		return res, err
+	}
+	err = dao.Product.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+		res, err = dao.Product.Create(ctx, data)
+
+		// 项目阶段占比个性化配置
+		err = ProductStageRule.CreateDefault(ctx, in.Tid, res.Id)
+
+		// 查询项目当前自由阶段
+		stageInfo, err := dao.ProductStageRule.GetOne(ctx, &model.ProductStageRule{ProId: res.Id, ProStageId: in.ProTypeStageId})
+		if err != nil {
+			return err
+		}
+		// 更新项目个性化阶段定制信息
+		data.ProTypeStageId = stageInfo.Id
+		_, err = dao.Product.Modify(ctx, data)
+		return err
+	})
 
 	return res, err
 }
@@ -269,9 +270,13 @@ func (s *productService) checkInputData(ctx context.Context, in *model.ProductAp
 	conditionSubName := g.Map{
 		fmt.Sprintf("%s = ?", dao.Product.Columns().SubName): in.SubName,
 	}
+	conditionProNumber := g.Map{
+		fmt.Sprintf("%s = ?", dao.Product.Columns().ProNumber): in.ProNumber,
+	}
 	if in.Id > 0 {
 		conditionName["id != ?"] = in.Id
 		conditionSubName["id != ?"] = in.Id
+		conditionProNumber["id != ?"] = in.Id
 	}
 	// 1: 项目名称唯一
 	uniqueName, err := dao.Product.GetOneByCondition(ctx, conditionName)
@@ -291,8 +296,19 @@ func (s *productService) checkInputData(ctx context.Context, in *model.ProductAp
 		return in, errors.New("项目简称已存在，请确认输入信息是否正确")
 	}
 
+	// 3: 项目编号唯一
+	uniqueProNumber, err := dao.Product.GetOneByCondition(ctx, conditionProNumber)
+	if err != nil && err != sql.ErrNoRows {
+		return in, err
+	}
+	if !g.IsNil(uniqueProNumber) && !g.IsEmpty(uniqueProNumber.Id) {
+		return in, errors.New("项目编号已存在，请确认输入信息是否正确")
+	}
+
 	// 根据优先级评分计算优先级
-	if in.LccId, in.LccName, err = s.getLccByLcScore(ctx, in.LcScore); err != nil {
+	if info, err := s.getLccByLcScore(ctx, in.LcScore); err != nil {
+		in.LccId = gconv.Uint(info.Id)
+		in.LccName = info.Name
 		return in, err
 	}
 
@@ -302,39 +318,23 @@ func (s *productService) checkInputData(ctx context.Context, in *model.ProductAp
 	return in, err
 }
 
-func (s *productService) getLccByLcScore(ctx context.Context, lcScore uint) (lccId uint, lccName string, err error) {
+func (s *productService) getLccByLcScore(ctx context.Context, lcScore uint) (confirmInfo *product.LevelConfirmInfo, err error) {
+	confirmInfo = &product.LevelConfirmInfo{}
 	// 查询项目优先级确认配置信息
 	levelConfirmList, err := boot.LevelConfirmServer.GetList(ctx, &product.GetListLevelConfirmReq{
 		Page: 1,
 		Size: 100,
 	})
 	if err != nil {
-		return 0, "", err
+		return confirmInfo, err
 	}
 	if g.IsEmpty(levelConfirmList.TotalSize) {
-		return 0, "", errors.New("请先完善项目优先级相关配置信息")
+		return confirmInfo, errors.New("请先完善项目优先级相关配置信息")
 	}
 
-	for _, v := range levelConfirmList.GetData() {
-		switch v.ScoreRange {
-		case consts.ScoreRangeMin:
-			// 左闭右开
-			if v.ScoreMin <= gconv.Float32(lcScore) && gconv.Float32(lcScore) < v.ScoreMax {
-				return gconv.Uint(v.Id), v.Name, nil
-			}
-		case consts.ScoreRangeMax:
-			// 左开右闭
-			if v.ScoreMin < gconv.Float32(lcScore) && gconv.Float32(lcScore) <= v.ScoreMax {
-				return gconv.Uint(v.Id), v.Name, nil
-			}
-		case consts.ScoreRangeMinAndMax:
-			// 左闭右闭
-			if v.ScoreMin <= gconv.Float32(lcScore) && gconv.Float32(lcScore) <= v.ScoreMax {
-				return gconv.Uint(v.Id), v.Name, nil
-			}
-		}
-	}
-	return
+	confirmInfo = util.GetLevelConfirmByScore(levelConfirmList.GetData(), lcScore)
+
+	return confirmInfo, nil
 }
 
 func (s *productService) getIncentiveBudgetByLcScore(ctx context.Context, lcScore, fixType uint, netProfit, fixBudget float64) (incentiveBudget float64, err error) {
@@ -360,30 +360,8 @@ func (s *productService) getIncentiveBudgetByLcScore(ctx context.Context, lcScor
 		return 0, errors.New("请先完善项目预算取值配置信息")
 	}
 
-	checkLcScore := gconv.Uint32(lcScore)
-	lcBudgetInfo := &inspirit.BudgetAssessInfo{}
-	for _, v := range levelAssessList.GetData() {
-		switch v.ScoreRange {
-		case consts.ScoreRangeMin:
-			// 左闭右开
-			if v.ScoreMin <= checkLcScore && checkLcScore < v.ScoreMax {
-				lcBudgetInfo = v
-				break
-			}
-		case consts.ScoreRangeMax:
-			// 左开右闭
-			if v.ScoreMin < checkLcScore && checkLcScore <= v.ScoreMax {
-				lcBudgetInfo = v
-				break
-			}
-		case consts.ScoreRangeMinAndMax:
-			// 左闭右闭
-			if v.ScoreMin <= checkLcScore && checkLcScore <= v.ScoreMax {
-				lcBudgetInfo = v
-				break
-			}
-		}
-	}
+	lcBudgetInfo := util.GetLevelAssessByScore(levelAssessList.GetData(), gconv.Uint32(lcScore))
+
 	if gconv.Int(keyValue) == consts.ProductBudgetByMin {
 		lcBudget = lcBudgetInfo.GetBudgetMin()
 	} else {

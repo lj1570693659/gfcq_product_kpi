@@ -5,6 +5,8 @@ const (
 	FullTime = 1
 	// PartTime 兼职
 	PartTime = 2
+	// PitchTime 参与
+	PitchTime = 3
 
 	// SexUnknown 未知-用户未选择
 	SexUnknown = 0
@@ -19,6 +21,8 @@ const (
 	ScoreRangeMax = 2
 	// ScoreRangeMinAndMax 左闭右闭
 	ScoreRangeMinAndMax = 3
+	// NotIncludeMinMax 左右开口
+	NotIncludeMinMax = 4
 
 	// ProductBudgetByScoreType [项目预算在预算区间中取值方式（1：取最小 2：取最大）] config配置信息
 	ProductBudgetByScoreType = "product_budget_by_score_type"
@@ -34,6 +38,9 @@ const (
 	BudgetFixAdd = 1
 	// BudgetFixLess 减少修正预算
 	BudgetFixLess = 2
+
+	// DefaultUserPassword 默认用户密码
+	DefaultUserPassword = "default_user_password"
 
 	// InspiritConfigDimension 绩效计算使用配置信息维度（crew:团队成员和PM共用成员配置信息，pm:团队成员和PM共用pm配置信息, single: 团队成员和PM用各自的配置信息）
 	InspiritConfigDimension = "inspirit_config_dimension"

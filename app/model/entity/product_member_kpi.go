@@ -22,6 +22,7 @@ type ProductMemberKpi struct {
 	JbName        string      `json:"jbName"        ` // 职级名称
 	FloatRaio     float64     `json:"floatRaio"     ` // 浮动贡献
 	KpiLevelId    uint        `json:"kpiLevelId"    ` // 绩效等级ID(区分是PM还是成员)
+	KpiLevelScore uint        `json:"kpiLevelScore" ` // 绩效得分
 	KpiLevel      string      `json:"kpiLevel"      ` // 绩效等级
 	KpiRadio      float64     `json:"kpiRadio"      ` // 绩效比例
 	Remark        string      `json:"remark"        ` // 预留备注说明信息

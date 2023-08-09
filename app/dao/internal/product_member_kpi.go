@@ -32,6 +32,7 @@ type ProductMemberKpiColumns struct {
 	JbName        string // 职级名称
 	FloatRaio     string // 浮动贡献
 	KpiLevelId    string // 绩效等级ID(区分是PM还是成员)
+	KpiLevelScore string // 绩效得分
 	KpiLevel      string // 绩效等级
 	KpiRadio      string // 绩效比例
 	Remark        string // 预留备注说明信息
@@ -53,6 +54,7 @@ var productMemberKpiColumns = ProductMemberKpiColumns{
 	JbName:        "jb_name",
 	FloatRaio:     "float_raio",
 	KpiLevelId:    "kpi_level_id",
+	KpiLevelScore: "kpi_level_score",
 	KpiLevel:      "kpi_level",
 	KpiRadio:      "kpi_radio",
 	Remark:        "remark",

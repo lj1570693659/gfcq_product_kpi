@@ -49,6 +49,10 @@ func (s *productDao) GetList(ctx context.Context, in *model.ProductApiGetListReq
 	if len(in.SubName) > 0 {
 		query = query.Where(fmt.Sprintf("%s like ?", s.Columns().SubName), g.Slice{fmt.Sprintf("%s%s", in.SubName, "%")})
 	}
+	// 项目编号
+	if len(in.ProNumber) > 0 {
+		query = query.Where(fmt.Sprintf("%s like ?", s.Columns().ProNumber), g.Slice{fmt.Sprintf("%s%s", in.ProNumber, "%")})
+	}
 	// 项目优先级ID
 	if len(in.LccId) > 0 {
 		query = query.WhereIn(s.Columns().LccId, in.LccId)

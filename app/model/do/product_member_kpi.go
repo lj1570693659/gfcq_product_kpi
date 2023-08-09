@@ -24,6 +24,7 @@ type ProductMemberKpi struct {
 	JbName        interface{} // 职级名称
 	FloatRaio     interface{} // 浮动贡献
 	KpiLevelId    interface{} // 绩效等级ID(区分是PM还是成员)
+	KpiLevelScore interface{} // 绩效得分
 	KpiLevel      interface{} // 绩效等级
 	KpiRadio      interface{} // 绩效比例
 	Remark        interface{} // 预留备注说明信息

@@ -11,7 +11,7 @@ ENV WORKDIR /app/main
 
 # 添加应用可执行文件，并设置执行权限
 ADD ./main   $WORKDIR/main
-ADD ./config/config.toml   $WORKDIR/config/config.toml
+ADD ./config/config_docker.toml   $WORKDIR/config/config.toml
 ADD ./document/auth/model.conf   $WORKDIR/document/auth/model.conf
 ADD ./public/excel/   $WORKDIR/public/excel/
 RUN chmod +x $WORKDIR/main

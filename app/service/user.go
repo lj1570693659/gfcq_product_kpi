@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,7 +11,6 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/lj1570693659/gfcq_product_kpi/app/dao"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
-	"github.com/lj1570693659/gfcq_product_kpi/app/model/do"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model/entity"
 	"github.com/lj1570693659/gfcq_product_kpi/library/util"
 )
@@ -95,16 +95,16 @@ func (s *userService) GetProfile(ctx context.Context) *model.User {
 }
 
 func (s *userService) ChangePwd(ctx context.Context, userInfo *model.UserApiChangePwdReq) error {
-	var user *entity.User
-	err := dao.User.Ctx(ctx).Where(dao.User.Columns().WorkNumber, userInfo.WorkNumber).Scan(&user)
+	var user model.User
+	user, err := dao.User.GetOne(ctx, model.User{WorkNumber: userInfo.WorkNumber})
 	if err != nil {
 		return err
 	}
-	if user == nil {
+	if g.IsNil(user) {
 		return errors.New("账号或密码错误")
 	}
 
-	_, err = dao.User.Ctx(ctx).Where(dao.User.Columns().Id, user.Id).OmitEmpty().Data(do.User{Password: util.Encrypt(userInfo.Password)}).Update()
+	_, err = dao.User.Modify(ctx, model.User{Password: util.Encrypt(userInfo.Password), Id: user.Id})
 	if err != nil {
 		return err
 	}
@@ -112,4 +112,15 @@ func (s *userService) ChangePwd(ctx context.Context, userInfo *model.UserApiChan
 
 	err = s.SignOut(ctx)
 	return err
+}
+
+func (s *userService) IsSignUp(ctx context.Context, userInfo *model.UserServiceSignUpReq) (error, bool) {
+	info, err := dao.User.GetOne(ctx, model.User{WorkNumber: userInfo.WorkNumber})
+	if !g.IsNil(err) && (err.Error() != sql.ErrNoRows.Error()) {
+		return err, false
+	}
+	if !g.IsNil(info) && !g.IsEmpty(info.Id) {
+		return nil, true
+	}
+	return nil, false
 }

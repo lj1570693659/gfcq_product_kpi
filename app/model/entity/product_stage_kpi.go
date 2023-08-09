@@ -25,6 +25,7 @@ type ProductStageKpi struct {
 	PmBase           float64     `json:"pmBase"           ` // PM发放基础
 	PmFloatRadio     float64     `json:"pmFloatRadio"     ` // PM浮动比例
 	PmKpiLevelId     uint        `json:"pmKpiLevelId"     ` // PM绩效等级
+	PmKpiLevelScore  uint        `json:"pmKpiLevelScore"  ` // PM绩效得分
 	PmKpiLevelName   string      `json:"pmKpiLevelName"   ` // PM绩效等级名称
 	PmKpiLevelRadio  float64     `json:"pmKpiLevelRadio"  ` // PM绩效等级比例
 	PmIncentiveQuota float64     `json:"pmIncentiveQuota" ` // PM实际应发额度

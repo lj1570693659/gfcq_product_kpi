@@ -5,7 +5,13 @@
 package dao
 
 import (
+	"context"
+	"encoding/json"
+	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/lj1570693659/gfcq_product_kpi/app/dao/internal"
+	"github.com/lj1570693659/gfcq_product_kpi/app/model"
+	"github.com/lj1570693659/gfcq_product_kpi/app/model/do"
 )
 
 // userDao is the manager for logic model data accessing
@@ -23,3 +29,60 @@ var (
 )
 
 // Fill with you ideas below.
+
+func (s *userDao) GetOne(ctx context.Context, in model.User) (res model.User, err error) {
+	entity := model.User{}
+	query := s.Ctx(ctx)
+
+	// 项目经理投入程度
+	if len(in.WorkNumber) > 0 {
+		query = query.Where(s.Columns().WorkNumber, in.WorkNumber)
+	}
+	if in.Id > 0 {
+		query = query.Where(s.Columns().Id, in.Id)
+	}
+
+	if err = query.Scan(&entity); err != nil {
+		return res, err
+	}
+
+	return entity, nil
+}
+
+// Create 创建项目基础数据
+func (s *userDao) Create(ctx context.Context, in model.User) (model.User, error) {
+	data := do.User{}
+	input, _ := json.Marshal(in)
+	err := json.Unmarshal(input, &data)
+	if err != nil {
+		return in, err
+	}
+
+	data.CreateTime = gtime.Now()
+	data.UpdateTime = gtime.Now()
+	lastInsertId, err := s.Ctx(ctx).Data(data).InsertAndGetId()
+	if err != nil {
+		return in, err
+	}
+
+	in.Id = gconv.Int(lastInsertId)
+	return in, nil
+}
+
+// Modify 编辑项目基础数据
+func (s *userDao) Modify(ctx context.Context, in model.User) (model.User, error) {
+	data := do.User{}
+	input, _ := json.Marshal(in)
+	err := json.Unmarshal(input, &data)
+	if err != nil {
+		return in, err
+	}
+
+	data.UpdateTime = gtime.Now()
+	_, err = s.Ctx(ctx).Where(s.Columns().Id, in.Id).Data(data).OmitEmpty().Update()
+	if err != nil {
+		return in, err
+	}
+
+	return in, nil
+}

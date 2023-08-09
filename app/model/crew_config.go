@@ -32,12 +32,12 @@ type CrewManageIndexApiDeleteReq struct {
 
 // CrewHoursIndexApiChangeReq 工时指数预算信息变更
 type CrewHoursIndexApiChangeReq struct {
-	ID         int     `json:"id"`                                                                    // 主键
-	ScoreIndex int     `v:"required|min:0#管理指数不能为空|管理指数大于等于0" json:"scoreIndex"`                      // 管理指数
-	ScoreMin   float64 `v:"required|min:0#工时占比下限不能为空|工时占比下限大于等于0" json:"scoreMin"`                    // 得分下限
-	ScoreMax   float64 `v:"required|max:100#工时占比上限不能为空|工时占比上限小于等于100" json:"scoreMax"`                // 得分上线
-	ScoreRange uint    `v:"required|in:1,2,3#评分区间包含关系不能为空|评分区间包含关系有左闭右开、左开右闭、左闭右闭" json:"scoreRange"` // 得分区间包含关系（1：左闭右开，2：左开右闭,3:左闭右闭）
-	Remark     string  `json:"remark"`                                                                // 预留备注说明信息
+	ID         int     `json:"id"`                                                                           // 主键
+	ScoreIndex int     `v:"required|min:0#管理指数不能为空|管理指数大于等于0" json:"scoreIndex"`                             // 管理指数
+	ScoreMin   float64 `v:"required|min:0#工时占比下限不能为空|工时占比下限大于等于0" json:"scoreMin"`                           // 得分下限
+	ScoreMax   float64 `v:"required|max:100#工时占比上限不能为空|工时占比上限小于等于100" json:"scoreMax"`                       // 得分上线
+	ScoreRange uint    `v:"required|in:1,2,3,4#评分区间包含关系不能为空|评分区间包含关系有左闭右开、左开右闭、左闭右闭、左右开口" json:"scoreRange"` // 得分区间包含关系（1：左闭右开，2：左开右闭,3:左闭右闭）
+	Remark     string  `json:"remark"`                                                                       // 预留备注说明信息
 }
 
 // CrewHoursIndexApiDeleteReq 删除工时指数预算信息
@@ -84,11 +84,27 @@ type CrewOvertimeRuleApiChangeReq struct {
 	ScoreMin   float64 `v:"required|float|min:0#加班贡献比例下限不能为空|请输入数据格式的加班贡献比例|加班贡献比例下限大于等于0" json:"scoreMin"`   // 得分下限
 	ScoreMax   float64 `v:"required|float|max:1.0#加班贡献比例上限不能为空|请输入数据格式的加班贡献比例|加班贡献比例上限小于等于1" json:"scoreMax"` // 得分上线
 	Redio      float64 `v:"required|float#浮动比例不能为空|请输入数据格式的浮动比例" json:"redio"`                                // 浮动比例
-	ScoreRange uint    `v:"required|in:1,2,3#评分区间包含关系不能为空|评分区间包含关系有左闭右开、左开右闭、左闭右闭" json:"scoreRange"`         // 得分区间包含关系（1：左闭右开，2：左开右闭,3:左闭右闭）
+	ScoreRange uint    `v:"required|in:1,2,3,4#评分区间包含关系不能为空|评分区间包含关系有左闭右开、左开右闭、左闭右闭、左右开口" json:"scoreRange"`  // 得分区间包含关系（1：左闭右开，2：左开右闭,3:左闭右闭）
 	Remark     string  `json:"remark"`                                                                        // 预留备注说明信息
 }
 
 // CrewOvertimeRuleApiDeleteReq 删除加班贡献预算信息
 type CrewOvertimeRuleApiDeleteReq struct {
+	ID string `v:"required|integer#删除数据源不能为空|删除数据源错误" json:"id"` // 主键
+}
+
+// CrewKpiRuleApiChangeReq 绩效等级信息变更
+type CrewKpiRuleApiChangeReq struct {
+	ID         int     `json:"id"`                                                                            // 主键
+	LevelName  string  `v:"required#绩效等级名称不能为空" json:"levelName"`                                             // 绩效等级名称
+	ScoreMin   int32   `v:"required|integer|min:0#绩效等级评分下限不能为空|请输入数据格式的绩效等级评分|绩效等级评分下限大于等于0" json:"scoreMin"` // 得分下限
+	ScoreMax   int32   `v:"required|integer|min:1#绩效等级评分上限不能为空|请输入数据格式的绩效等级评分|绩效等级评分上限小于等于1" json:"scoreMax"` // 得分上线
+	ScoreRange uint    `v:"required|in:1,2,3,4#评分区间包含关系不能为空|评分区间包含关系有左闭右开、左开右闭、左右闭口、左右开口" json:"scoreRange"`  // 得分区间包含关系（1：左闭右开，2：左开右闭,3:左闭右闭）
+	Redio      float64 `v:"required|float#浮动比例不能为空|请输入数据格式的浮动比例" json:"redio"`                                // 浮动比例
+	Remark     string  `json:"remark"`                                                                        // 预留备注说明信息
+}
+
+// CrewKpiRuleApiDeleteReq 删除加班贡献预算信息
+type CrewKpiRuleApiDeleteReq struct {
 	ID string `v:"required|integer#删除数据源不能为空|删除数据源错误" json:"id"` // 主键
 }

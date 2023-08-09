@@ -8,11 +8,14 @@ import (
 	"fmt"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/lj1570693659/gfcq_product_kpi/app/dao"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model/entity"
 	"github.com/lj1570693659/gfcq_product_kpi/boot"
+	"github.com/lj1570693659/gfcq_product_kpi/consts"
 	"github.com/lj1570693659/gfcq_product_kpi/library/util"
 	v1 "github.com/lj1570693659/gfcq_protoc/common/v1"
+	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 	"strings"
 )
 
@@ -192,6 +195,7 @@ func (s *employeeService) GetOne(ctx context.Context, input *model.EmployeeApiGe
 	if !g.IsEmpty(employeeInfo) {
 		employeeInfoByte, _ := json.Marshal(employeeInfo.Employee)
 		json.Unmarshal(employeeInfoByte, &res.EmployeeInfo)
+		res.JobIds = gconv.Ints(strings.Split(res.EmployeeInfo.JobId, ","))
 
 		// 员工岗位信息
 		jobList := make([]entity.Job, 0)
@@ -221,9 +225,9 @@ func (s *employeeService) GetOne(ctx context.Context, input *model.EmployeeApiGe
 		// 员工所在部门信息
 		departmentList := make([]entity.Department, 0)
 		departmentName := make([]string, 0)
-		departmentIds := gconv.Int32s(strings.Split(employeeInfo.Employee.DepartId, ","))
-		if len(departmentIds) > 0 {
-			for _, departId := range departmentIds {
+		res.DepartmentIds = gconv.Int32s(strings.Split(employeeInfo.Employee.DepartId, ","))
+		if len(res.DepartmentIds) > 0 {
+			for _, departId := range res.DepartmentIds {
 				departmentInfo, err := boot.DepertmentServer.GetOne(ctx, &v1.GetOneDepartmentReq{
 					Id: departId,
 				})
@@ -259,11 +263,14 @@ func (s *employeeService) GetOne(ctx context.Context, input *model.EmployeeApiGe
 
 // Create 创建员工信息
 func (s *employeeService) Create(ctx context.Context, input *model.EmployeeApiCreateReq) error {
+	if len(input.WorkNumber) == 0 {
+		input.WorkNumber = Context.Get(ctx).User.UserInfo.WorkNumber
+	}
 	employeeInfo, err := boot.EmployeeServer.GetOne(ctx, &v1.GetOneEmployeeReq{
-		//WorkNumber: Context.Get(ctx).User.UserInfo.WorkNumber,
 		WorkNumber: input.WorkNumber,
 	})
-	if err != nil && err.Error() != sql.ErrNoRows.Error() {
+
+	if err != nil && rpctypes.ErrorDesc(err) != sql.ErrNoRows.Error() {
 		return err
 	}
 
@@ -271,10 +278,9 @@ func (s *employeeService) Create(ctx context.Context, input *model.EmployeeApiCr
 		return errors.New("员工信息已同步，请勿重复添加")
 	}
 
-	_, err = boot.EmployeeServer.Create(ctx, &v1.CreateEmployeeReq{
-		Remark:   input.Remark,
-		UserName: input.UserName,
-		//WorkNumber:   Context.Get(ctx).User.UserInfo.WorkNumber,
+	res, err := boot.EmployeeServer.Create(ctx, &v1.CreateEmployeeReq{
+		Remark:       input.Remark,
+		UserName:     input.UserName,
 		WorkNumber:   input.WorkNumber,
 		Sex:          v1.SexEnum(input.Sex),
 		Phone:        input.Phone,
@@ -285,6 +291,23 @@ func (s *employeeService) Create(ctx context.Context, input *model.EmployeeApiCr
 		Status:       v1.StatusEnum(input.Status),
 	})
 
+	// 默认同步登录系统账号信息
+	err, isSignUp := User.IsSignUp(ctx, &model.UserServiceSignUpReq{
+		WorkNumber: input.WorkNumber,
+	})
+
+	if !isSignUp && g.IsNil(err) {
+		defaultUserPassword, err := dao.Config.GetKeyValueByKeyName(ctx, consts.DefaultUserPassword)
+		if err != nil {
+			g.Log("config").Error(ctx, err)
+		}
+		err = User.SignUp(ctx, &model.UserServiceSignUpReq{
+			EmployeeId: res.GetEmployee().Id,
+			WorkNumber: input.WorkNumber,
+			UserName:   input.WorkNumber,
+			Password:   defaultUserPassword,
+		})
+	}
 	return err
 }
 
@@ -301,10 +324,9 @@ func (s *employeeService) Modify(ctx context.Context, input *model.EmployeeApiMo
 	}
 
 	_, err = boot.EmployeeServer.Modify(ctx, &v1.ModifyEmployeeReq{
-		Id:       gconv.Int32(input.ID),
-		Remark:   input.Remark,
-		UserName: input.UserName,
-		//WorkNumber:   Context.Get(ctx).User.UserInfo.WorkNumber,
+		Id:           gconv.Int32(input.ID),
+		Remark:       input.Remark,
+		UserName:     input.UserName,
 		WorkNumber:   input.WorkNumber,
 		Sex:          v1.SexEnum(input.Sex),
 		Phone:        input.Phone,
@@ -316,4 +338,40 @@ func (s *employeeService) Modify(ctx context.Context, input *model.EmployeeApiMo
 	})
 
 	return err
+}
+
+func (s *employeeService) GetEmployeeCount(ctx context.Context, departId int32) (*v1.GetCountEmployeeJobRes, error) {
+	return boot.EmployeeJobServer.GetCount(ctx, &v1.GetCountEmployeeJobReq{
+		EmployeeJob: &v1.EmployeeJobInfo{
+			DepartId: departId,
+		},
+		GroupBy:           dao.EmployeeJob.Columns().EmployeeId,
+		GetFiledNameCount: dao.EmployeeJob.Columns().EmployeeId,
+	})
+}
+
+func (s *employeeService) GetLeader(ctx context.Context, departmentList []*v1.DepartmentInfo, departmentIds string) (map[string]string, error) {
+	leader := map[string]string{}
+	if len(departmentList) == 0 {
+		return leader, nil
+	}
+	departIds := gconv.Int32s(util.DeleteIntSlice(strings.Split(departmentIds, ",")))
+	for _, v := range departmentList {
+		for _, empDv := range departIds {
+			if empDv == v.Id {
+				if v.Pid > 0 {
+					// 下级部门
+					leaderInfo, err := boot.EmployeeServer.GetOne(ctx, &v1.GetOneEmployeeReq{DepartId: []int32{v.Pid}})
+					if err != nil {
+						return leader, nil
+					}
+					leader[v.GetName()] = fmt.Sprintf("%s-%s", leaderInfo.GetEmployee().UserName, leaderInfo.GetEmployee().WorkNumber)
+				} else {
+					// 上级部门
+					leader[v.GetName()] = "-"
+				}
+			}
+		}
+	}
+	return leader, nil
 }

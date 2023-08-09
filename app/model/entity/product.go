@@ -13,6 +13,7 @@ type Product struct {
 	Id              uint        `json:"id"              ` //
 	Tid             uint        `json:"tid"             ` // 项目类型（type关联表）
 	Name            string      `json:"name"            ` // 项目名称
+	ProNumber       string      `json:"proNumber"       ` // 项目编号
 	SubName         string      `json:"subName"         ` // 项目简称
 	LcScore         uint        `json:"lcScore"         ` // 优先级评分
 	LccId           uint        `json:"lccId"           ` // 项目优先级ID

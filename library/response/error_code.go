@@ -46,6 +46,11 @@ const (
 	CreateFailOvertimeRule = 3083
 	ModifyFailOvertimeRule = 3084
 	DeleteFailOvertimeRule = 3085
+	FormatFailKpiRule      = 3092
+	CreateFailKpiRule      = 3093
+	ModifyFailKpiRule      = 3094
+	DeleteFailKpiRule      = 3095
+
 	// FormatFailProduct 项目基础信息格式错误
 	FormatFailProduct       = 602
 	CreateFailProduct       = 603

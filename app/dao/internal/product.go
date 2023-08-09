@@ -23,6 +23,7 @@ type ProductColumns struct {
 	Id              string //
 	Tid             string // 项目类型（type关联表）
 	Name            string // 项目名称
+	ProNumber       string // 项目编号
 	SubName         string // 项目简称
 	LcScore         string // 优先级评分
 	LccId           string // 项目优先级ID
@@ -48,6 +49,7 @@ var productColumns = ProductColumns{
 	Id:              "id",
 	Tid:             "tid",
 	Name:            "name",
+	ProNumber:       "pro_number",
 	SubName:         "sub_name",
 	LcScore:         "lc_score",
 	LccId:           "lcc_id",
