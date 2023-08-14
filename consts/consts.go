@@ -65,6 +65,13 @@ const (
 	// IsNotPm 项目组成员对应数据
 	IsNotPm = 2
 
+	// IsGuide 主导方
+	IsGuide    = 1
+	IsNotGuide = 0
+	// IsSupport 支持方
+	IsSupport    = 1
+	IsNotSupport = 0
+
 	// OverTimeDevote 加班贡献
 	OverTimeDevote = 1
 	// SolveProblemDevote 解决问题贡献

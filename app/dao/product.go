@@ -69,6 +69,9 @@ func (s *productDao) GetList(ctx context.Context, in *model.ProductApiGetListReq
 	if len(in.PmlId) > 0 {
 		query = query.WhereIn(s.Columns().PmlId, in.PmId)
 	}
+	if len(in.Ids) > 0 {
+		query = query.WhereIn(s.Columns().Id, in.Ids)
+	}
 	// 项目经理投入程度
 	if in.Attribute > 0 {
 		query = query.Where(s.Columns().Attribute, in.Attribute)

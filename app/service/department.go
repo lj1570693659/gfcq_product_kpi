@@ -62,7 +62,7 @@ func (s *departmentService) getDepartTreeNode(ctx context.Context, perms []model
 		}
 		info := make([]model.DepartmentApiGetList, 0)
 		gconv.Scan(getChild.GetData(), &info)
-		perms[k].ChildDepart = info
+		perms[k].Children = info
 
 		if len(info) > 0 {
 			for ik, iv := range info {
@@ -118,6 +118,7 @@ func (s *departmentService) Create(ctx context.Context, input *model.DepartmentA
 	_, err := boot.DepertmentServer.Create(ctx, &v1.CreateDepartmentReq{
 		Pid:    gconv.Int32(input.Pid),
 		Name:   input.Name,
+		Level:  gconv.Int32(input.Level),
 		Remark: input.Remark,
 	})
 
@@ -129,6 +130,7 @@ func (s *departmentService) Modify(ctx context.Context, input *model.DepartmentA
 	_, err := boot.DepertmentServer.Modify(ctx, &v1.ModifyDepartmentReq{
 		Id:     gconv.Int32(input.ID),
 		Pid:    gconv.Int32(input.Pid),
+		Level:  gconv.Int32(input.Level),
 		Name:   input.Name,
 		Remark: input.Remark,
 	})

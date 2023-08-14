@@ -1,11 +1,12 @@
 package service
 
 import (
-	"fmt"
+	"database/sql"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/library/response"
+	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 	"net/http"
 )
 
@@ -35,14 +36,13 @@ func (s *middlewareService) Ctx(r *ghttp.Request) {
 				WorkNumber: user.WorkNumber,
 			},
 		})
-
-		if err != nil {
+		if err != nil && rpctypes.ErrorDesc(err) != sql.ErrNoRows.Error() {
 			response.JsonExit(r, http.StatusForbidden, err.Error())
 		}
 		Context.SetUserEmployee(r.Context(), employeeInfo.EmployeeInfo)
 		Context.SetUserDepartment(r.Context(), employeeInfo.DepartmentInfo)
 		Context.SetUserJob(r.Context(), employeeInfo.JobInfo)
-		Context.SetUserProduct(r.Context(), employeeInfo.ProductInfo)
+		Context.SetUserProduct(r.Context(), employeeInfo.ProductMemberList)
 	}
 
 	// 执行下一步请求逻辑
@@ -52,10 +52,8 @@ func (s *middlewareService) Ctx(r *ghttp.Request) {
 // LoggedIn 鉴权中间件，验证是否登录
 func (s *middlewareService) LoggedIn(r *ghttp.Request) {
 	if User.IsSignedIn(r.Context()) {
-		fmt.Println("islogin------------------")
 		r.Middleware.Next()
 	} else {
-		fmt.Println("islogin----------------false--")
 		response.JsonExit(r, http.StatusForbidden, "")
 	}
 }
@@ -63,34 +61,34 @@ func (s *middlewareService) LoggedIn(r *ghttp.Request) {
 // Role 鉴权中间件，验证是否在允许角色组内
 func (s *middlewareService) Role(r *ghttp.Request) {
 	ok, err := Casbin.CheckAuth(r.Context(), Context.Get(r.Context()).User, r, ROLE)
-	fmt.Println("Role----------------false--", ok, err)
 	if err != nil {
 		response.JsonExit(r, http.StatusForbidden, err.Error())
 	}
 	if ok {
 		r.Middleware.Next()
 	} else {
-		response.JsonExit(r, http.StatusForbidden, err.Error())
+		response.JsonExit(r, http.StatusForbidden, "当前用户权限不足")
 	}
 }
 
 // BusinessRole 鉴权中间件，验证是否在项目组内 TODO
 func (s *middlewareService) BusinessRole(r *ghttp.Request) {
 	ok, err := Casbin.CheckAuth(r.Context(), Context.Get(r.Context()).User, r, BUSINESS_ROLE)
-	fmt.Println("BusinessRole----------------false--", ok, err)
 	if err != nil {
 		response.JsonExit(r, http.StatusForbidden, err.Error())
 	}
 	if ok {
 		r.Middleware.Next()
 	} else {
-		response.JsonExit(r, http.StatusForbidden, err.Error())
+		response.JsonExit(r, http.StatusForbidden, "当前用户权限不足")
 	}
 }
 
 // CORS 允许接口跨域请求
 func (s *middlewareService) CORS(r *ghttp.Request) {
-	r.Response.CORSDefault()
+	corsOptions := r.Response.DefaultCORSOptions()
+	corsOptions.AllowDomain = []string{"localhost:8199", "10.24.12.84:8199", "localhost:9528", "10.24.12.84:9528"}
+	r.Response.CORS(corsOptions)
 	r.Middleware.Next()
 }
 

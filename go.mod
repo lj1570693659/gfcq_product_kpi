@@ -8,7 +8,7 @@ require (
 	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.4.4
 	github.com/gogf/gf/v2 v2.5.1
 	github.com/gogf/swagger v1.3.0
-	github.com/lj1570693659/gfcq_protoc v0.0.0-20230809071228-81e45b01a842
+	github.com/lj1570693659/gfcq_protoc v0.0.0-20230814053254-1fe44be91b66
 	github.com/xuri/excelize/v2 v2.7.1
 	go.etcd.io/etcd/api/v3 v3.5.4
 	google.golang.org/grpc v1.56.1

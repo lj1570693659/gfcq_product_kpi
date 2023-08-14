@@ -239,6 +239,7 @@ func (s *employeeService) GetOne(ctx context.Context, input *model.EmployeeApiGe
 					Id:     gconv.Int(departmentInfo.Department.Id),
 					Name:   departmentInfo.Department.Name,
 					Pid:    gconv.Int(departmentInfo.Department.Pid),
+					Level:  gconv.Uint(departmentInfo.Department.Level),
 					Remark: departmentInfo.Department.Remark,
 				})
 				departmentName = append(departmentName, departmentInfo.Department.Name)
@@ -256,6 +257,13 @@ func (s *employeeService) GetOne(ctx context.Context, input *model.EmployeeApiGe
 			}
 			gconv.Struct(jobLevel.GetJobLevel(), &res.LevelInfo)
 		}
+
+		// 参与项目信息
+		proMemberList, err := dao.ProductMember.GetAll(ctx, &model.ProductMemberWhere{EmpId: []uint{gconv.Uint(employeeInfo.GetEmployee().Id)}})
+		if err != nil {
+			return res, err
+		}
+		res.ProductMemberList = proMemberList
 	}
 
 	return res, err

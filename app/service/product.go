@@ -179,10 +179,15 @@ func (s *productService) Create(ctx context.Context, in *model.ProductApiChangeR
 	}
 	err = dao.Product.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 		res, err = dao.Product.Create(ctx, data)
+		if err != nil {
+			return err
+		}
 
 		// 项目阶段占比个性化配置
 		err = ProductStageRule.CreateDefault(ctx, in.Tid, res.Id)
-
+		if err != nil {
+			return err
+		}
 		// 查询项目当前自由阶段
 		stageInfo, err := dao.ProductStageRule.GetOne(ctx, &model.ProductStageRule{ProId: res.Id, ProStageId: in.ProTypeStageId})
 		if err != nil {
@@ -306,11 +311,12 @@ func (s *productService) checkInputData(ctx context.Context, in *model.ProductAp
 	}
 
 	// 根据优先级评分计算优先级
-	if info, err := s.getLccByLcScore(ctx, in.LcScore); err != nil {
-		in.LccId = gconv.Uint(info.Id)
-		in.LccName = info.Name
+	info, err := s.getLccByLcScore(ctx, in.LcScore)
+	if err != nil {
 		return in, err
 	}
+	in.LccId = gconv.Uint(info.Id)
+	in.LccName = info.Name
 
 	// 根据评分计算总激励预算
 	in.IncentiveBudget, err = s.getIncentiveBudgetByLcScore(ctx, in.LcScore, in.FixType, in.NetProfit, in.FixBudget)

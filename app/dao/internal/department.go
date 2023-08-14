@@ -23,6 +23,7 @@ type DepartmentColumns struct {
 	Id         string //
 	Name       string // 部门名称
 	Pid        string // 上级部门
+	Level      string // 部门层级
 	Remark     string // 预留备注信息
 	CreateTime string // 数据新增时间
 	UpdateTime string // 最后一次更新数据时间
@@ -33,6 +34,7 @@ var departmentColumns = DepartmentColumns{
 	Id:         "id",
 	Name:       "name",
 	Pid:        "pid",
+	Level:      "level",
 	Remark:     "remark",
 	CreateTime: "create_time",
 	UpdateTime: "update_time",

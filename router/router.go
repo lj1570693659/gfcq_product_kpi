@@ -40,8 +40,6 @@ func init() {
 					sgoe.Middleware(service.Middleware.LoggedIn)
 					sgoe.GET("/isSyncEmployee", api.Employee.IsSyncEmployee)
 					sgoe.POST("/create", api.Employee.Create)
-
-					sgoe.Middleware(service.Middleware.Role, service.Middleware.BusinessRole)
 					sgoe.PUT("/modify", api.Employee.Modify)
 					sgoe.GET("/info", api.Employee.GetOne)
 					sgoe.GET("/lists", api.Employee.GetList)
@@ -49,6 +47,7 @@ func init() {
 				})
 				// 部门信息
 				sgo.Group("/department", func(dgo *ghttp.RouterGroup) {
+					dgo.Middleware(service.Middleware.Role, service.Middleware.BusinessRole)
 					dgo.GET("/lists", api.Department.GetList)
 					dgo.GET("/info", api.Department.GetOne)
 					dgo.POST("/create", api.Department.Create)
@@ -57,6 +56,7 @@ func init() {
 				})
 				// 职级信息
 				sgo.Group("/level", func(lgo *ghttp.RouterGroup) {
+					lgo.Middleware(service.Middleware.Role, service.Middleware.BusinessRole)
 					lgo.GET("/lists", api.JobLevel.GetList)
 					lgo.GET("/info", api.JobLevel.GetOne)
 					lgo.GET("/all", api.JobLevel.GetAll)
@@ -78,6 +78,7 @@ func init() {
 
 		// 配置管理
 		group.Group("/config", func(cg *ghttp.RouterGroup) {
+			cg.Middleware(service.Middleware.Role, service.Middleware.BusinessRole)
 			// 项目配置
 			cg.Group("/product", func(cgp *ghttp.RouterGroup) {
 				// 评级、优先级、研发模式、项目类型、阶段、项目角色
@@ -125,7 +126,7 @@ func init() {
 					rgp.DELETE("/delete", api.ProductRoles.Delete)
 				})
 			})
-			// 绩效配置 TODO
+			// 绩效配置
 			cg.Group("/inspirit", func(cgi *ghttp.RouterGroup) {
 				// 激励预算、激励应发、管理指数。。。
 				// 激励预算
@@ -190,6 +191,7 @@ func init() {
 
 		// 项目绩效
 		group.Group("/achieve", func(ag *ghttp.RouterGroup) {
+			ag.Middleware(service.Middleware.Role, service.Middleware.BusinessRole)
 			// 阶段绩效
 			ag.Group("/product", func(agp *ghttp.RouterGroup) {
 				agp.POST("/create", api.ProductStageKpi.Create)
@@ -230,6 +232,7 @@ func init() {
 
 		// 项目管理
 		group.Group("/product", func(pg *ghttp.RouterGroup) {
+			pg.Middleware(service.Middleware.Role, service.Middleware.BusinessRole)
 			// 清单、详情
 			pg.Middleware(service.Middleware.LoggedIn, service.Middleware.Role, service.Middleware.BusinessRole)
 			pg.GET("/lists", api.Product.GetList)

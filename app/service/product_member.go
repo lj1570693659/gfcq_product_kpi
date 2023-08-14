@@ -13,11 +13,13 @@ import (
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model/entity"
 	"github.com/lj1570693659/gfcq_product_kpi/boot"
+	"github.com/lj1570693659/gfcq_product_kpi/consts"
 	"github.com/lj1570693659/gfcq_product_kpi/library/response"
 	"github.com/lj1570693659/gfcq_product_kpi/library/util"
 	v1 "github.com/lj1570693659/gfcq_protoc/common/v1"
 	inspirit "github.com/lj1570693659/gfcq_protoc/config/inspirit/v1"
 	productV1 "github.com/lj1570693659/gfcq_protoc/config/product/v1"
+	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 	"strings"
 )
 
@@ -48,13 +50,13 @@ func (s *productMemberService) Import(ctx context.Context, in *model.ProductMemb
 	}
 	// 2: 读取文件内容
 	saveDataFormat, err := s.makeProductMemberExcelData(in.TableHeader, in.TableData, in.ProId)
-
+	fmt.Println("err----saveDataFormat------------", saveDataFormat)
 	if err != nil {
 		return res, err
 	}
 	// 3: 文件内容保存
 	err = s.SaveProductMemberFromExcel(ctx, saveDataFormat)
-
+	fmt.Println("err----save------------", err)
 	return res, err
 }
 
@@ -194,7 +196,7 @@ func (s *productMemberService) checkInputData(ctx context.Context, in *model.Pro
 
 	if !g.IsEmpty(in.WorkNumber) {
 		employeeInfo, err := boot.EmployeeServer.GetOne(ctx, &v1.GetOneEmployeeReq{WorkNumber: in.WorkNumber})
-		if err != nil && err.Error() != sql.ErrNoRows.Error() {
+		if err != nil && rpctypes.ErrorDesc(err) != sql.ErrNoRows.Error() {
 			return false, in, err
 		}
 		if g.IsNil(employeeInfo.GetEmployee()) || g.IsEmpty(employeeInfo.GetEmployee().GetId()) {
@@ -232,7 +234,9 @@ func (s *productMemberService) checkInputData(ctx context.Context, in *model.Pro
 				Pid:  0,
 			},
 		})
-		if err != nil && err.Error() != sql.ErrNoRows.Error() {
+
+		if err != nil && rpctypes.ErrorDesc(err) != sql.ErrNoRows.Error() {
+			fmt.Println("roles-11111---------------", roles)
 			return false, in, err
 		}
 		if g.IsNil(roles.GetRoles()) || g.IsEmpty(roles.GetRoles().GetId()) {
@@ -258,6 +262,7 @@ func (s *productMemberService) SaveProductMemberFromExcel(ctx context.Context, e
 	return dao.ProductMember.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 		// 查询项目优先级确认配置信息
 		for _, v := range excelData {
+			fmt.Println("err----v------------", v)
 			proMem, err := dao.ProductMember.GetOne(ctx, model.ProductMember{
 				ProId:      v.ProId,
 				WorkNumber: v.WorkNumber,
@@ -399,9 +404,17 @@ func (s *productMemberService) makeProductMemberExcelData(tableHeader []string, 
 			case "工作地":
 				info.WorkAddress = gconv.String(vv)
 			case "主导方":
-				info.IsGuide = gconv.Uint(gconv.Bool(vv))
+				info.IsGuide = consts.IsNotGuide
+				vvStr := gconv.String(vv)
+				if len(vvStr) > 0 && strings.Contains(vvStr, "是") {
+					info.IsGuide = consts.IsGuide
+				}
 			case "支持方":
-				info.IsSupport = gconv.Uint(gconv.Bool(vv))
+				info.IsSupport = consts.IsNotSupport
+				vvStr := gconv.String(vv)
+				if len(vvStr) > 0 && strings.Contains(vvStr, "是") {
+					info.IsSupport = consts.IsSupport
+				}
 			case "备注":
 				info.Remark = gconv.String(vv)
 			}

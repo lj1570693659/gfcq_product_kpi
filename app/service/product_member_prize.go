@@ -244,7 +244,11 @@ func (s *productMemberPrizeService) Compute(ctx context.Context, in *model.Produ
 		getAllPrize[k].SentBase = getAllPrize[k].WeightPmoRadio * productStageKpi.CrewQuota
 		memberBaseQuota = memberBaseQuota + getAllPrize[k].SentBase
 		// 剩余额度
-		getAllPrize[k].RemaindQueto = productStageKpi.CrewQuota - memberBaseQuota
+		if (productStageKpi.CrewQuota - memberBaseQuota) < 0 {
+			getAllPrize[k].RemaindQueto = 0.00
+		} else {
+			getAllPrize[k].RemaindQueto = productStageKpi.CrewQuota - memberBaseQuota
+		}
 		// 实发额度
 		getAllPrize[k].SentQueto = getAllPrize[k].SentBase * (v.FloatRaio + v.KpiRadio)
 	}

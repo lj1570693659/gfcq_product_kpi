@@ -24,8 +24,12 @@ func (a *productApi) GetList(r *ghttp.Request) {
 	if err := r.Parse(&input); err != nil {
 		response.JsonExit(r, response.FormatFailProduct, err.Error())
 	}
+	ctx := r.Context()
+	if service.Context.Get(ctx).User.RoleLevel == service.LevelLow {
+		input.ProductWhere.Ids = service.Context.Get(ctx).User.ProductIds
+	}
 
-	res, err := service.Product.GetList(r.Context(), input)
+	res, err := service.Product.GetList(ctx, input)
 	if err != nil {
 		response.JsonExit(r, response.GetListFailProduct, err.Error())
 	} else {

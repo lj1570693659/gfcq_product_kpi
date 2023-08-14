@@ -181,6 +181,9 @@ func GetLevelAssessByScore(lists []*inspirit.BudgetAssessInfo, score uint32) *in
 func GetLevelConfirmByScore(lists []*product.LevelConfirmInfo, score uint) *product.LevelConfirmInfo {
 	for _, v := range lists {
 		if get := getIndexByScore(v.ScoreRange, gconv.Float32(v.ScoreMin), gconv.Float32(v.ScoreMax), gconv.Float32(score)); get {
+			fmt.Println("score------------------", score)
+			fmt.Println("get------------------", get)
+			fmt.Println("v------------------", v)
 			return v
 		}
 	}

@@ -17,6 +17,7 @@ import (
 	"github.com/lj1570693659/gfcq_product_kpi/library/util"
 	common "github.com/lj1570693659/gfcq_protoc/common/v1"
 	v1 "github.com/lj1570693659/gfcq_protoc/config/inspirit/v1"
+	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 	"time"
 )
 
@@ -247,19 +248,21 @@ func (s *productMemberKpiService) checkInputData(ctx context.Context, in model.P
 		in.JbName = memberInfo.JbName
 	}
 
-	if len(in.KpiLevel) > 0 {
+	if in.KpiLevelScore > 0 {
+		in.KpiLevelId = util.GetKpiRuleByScore(KpiRuleLists, in.KpiLevelScore)
+
 		kpiInfo, err := boot.CrewKpiRuleServer.GetOne(ctx, &v1.GetOneCrewKpiRuleReq{
 			CrewKpiRule: &v1.CrewKpiRuleInfo{
-				LevelName: in.KpiLevel,
+				Id: gconv.Int32(in.KpiLevelId),
 			},
 		})
-		if err != nil && err.Error() != sql.ErrNoRows.Error() {
+		if err != nil && rpctypes.ErrorDesc(err) != sql.ErrNoRows.Error() {
 			return false, in, getInfo, err
 		}
 		if g.IsNil(kpiInfo) || g.IsNil(kpiInfo.CrewKpiRule) || g.IsEmpty(kpiInfo.CrewKpiRule) {
 			return false, in, getInfo, errors.New("绩效等级信息错误，请核实")
 		}
-		in.KpiLevelId = kpiInfo.GetCrewKpiRule().GetId()
+		in.KpiLevel = kpiInfo.GetCrewKpiRule().GetLevelName()
 		in.KpiRadio = util.Decimal(gconv.Float64(kpiInfo.GetCrewKpiRule().GetRedio()))
 	}
 
@@ -354,8 +357,8 @@ func (s *productMemberKpiService) makeProductMemberKpiExcelData(tableHeader []st
 				info.WorkNumber = gconv.String(vv)
 			case "浮动贡献":
 				info.FloatRaio = gconv.Float64(vv)
-			case "绩效等级":
-				info.KpiLevel = gconv.String(vv)
+			case "绩效得分":
+				info.KpiLevelScore = gconv.Uint(vv)
 			case "关键事件分类":
 				info.ProductMemberKey.Type = gconv.String(vv)
 			case "事件描述":

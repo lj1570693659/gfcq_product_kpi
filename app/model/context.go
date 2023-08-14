@@ -22,11 +22,13 @@ type Context struct {
 
 // ContextUser 请求上下文中的用户信息
 type ContextUser struct {
-	UserInfo       *UserInfo           `json:"userInfo"`       // 系统账号信息
-	EmployeeInfo   Employee            `json:"employeeInfo"`   // 员工主体信息
-	JobInfo        []entity.Job        `json:"jobInfo"`        // 员工岗位信息
-	DepartmentInfo []entity.Department `json:"departmentInfo"` // 员工所在部门信息
-	ProductLists   []entity.Product    `json:"productLists"`   // 员工参与项目信息
+	UserInfo          *UserInfo           `json:"userInfo"`          // 系统账号信息
+	RoleLevel         int                 `json:"roleLevel"`         // 系统账号信息
+	EmployeeInfo      Employee            `json:"employeeInfo"`      // 员工主体信息
+	JobInfo           []entity.Job        `json:"jobInfo"`           // 员工岗位信息
+	DepartmentInfo    []entity.Department `json:"departmentInfo"`    // 员工所在部门信息
+	ProductIds        []uint              `json:"productIds"`        // 员工参与项目主键信息
+	ProductMemberList []*ProductMember    `json:"productMemberList"` // 员工参与项目信息
 }
 
 type UserInfo struct {

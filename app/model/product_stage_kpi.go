@@ -127,7 +127,8 @@ type ProductMemberKpiChangeReq struct {
 	JbId             uint                      `json:"jbId"          `                                                             // 职级ID
 	JbName           string                    `json:"jbName"        `                                                             // 职级名称
 	FloatRaio        float64                   `v:"required|float|max:1.0#浮动贡献不能为空|请输入正确的浮动贡献值|浮动贡献不能大于1.0" json:"floatRaio"     ` // 浮动贡献
-	KpiLevelId       int32                     `json:"kpiLevelId"    `                                                             // 绩效等级ID(区分是PM还是成员)
+	KpiLevelId       uint                      `json:"kpiLevelId"    `                                                             // 绩效等级ID(区分是PM还是成员)
+	KpiLevelScore    uint                      `v:"required|min:0#请输入项目经理绩效得分|项目经理绩效得分不能小于0" json:"kpiLevelScore"`                 // 绩效得分
 	KpiLevel         string                    `v:"required|in:S,A,B,C,D,E,F#绩效等级不能为空|请输入正确的绩效等级" json:"kpiLevel"      `           // 绩效等级
 	KpiRadio         float64                   `json:"kpiRadio"      `                                                             // 绩效比例
 	Remark           string                    `json:"remark"`                                                                     // 预留备注信息

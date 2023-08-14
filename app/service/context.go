@@ -52,6 +52,16 @@ func (s *contextService) SetUserDepartment(ctx context.Context, ctxUser []entity
 }
 
 // SetUserProduct 将上下文信息设置到上下文请求中，注意是完整覆盖
-func (s *contextService) SetUserProduct(ctx context.Context, ctxUser []entity.Product) {
-	s.Get(ctx).User.ProductLists = ctxUser
+func (s *contextService) SetUserProduct(ctx context.Context, ctxUser []*model.ProductMember) {
+	s.Get(ctx).User.ProductMemberList = ctxUser
+}
+
+// SetUserProductIds 将上下文信息设置到上下文请求中，注意是完整覆盖
+func (s *contextService) SetUserProductIds(ctx context.Context, productIds []uint) {
+	s.Get(ctx).User.ProductIds = productIds
+}
+
+// SetUserRoleLevel 将上下文信息设置到上下文请求中，注意是完整覆盖
+func (s *contextService) SetUserRoleLevel(ctx context.Context, roleLevel int) {
+	s.Get(ctx).User.RoleLevel = roleLevel
 }

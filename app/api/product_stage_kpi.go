@@ -71,6 +71,11 @@ func (a *productStageKpiApi) GetList(r *ghttp.Request) {
 		response.JsonExit(r, response.FormatFailProductStageKpi, err.Error())
 	}
 
+	ctx := r.Context()
+	if service.Context.Get(ctx).User.RoleLevel == service.LevelLow {
+		input.ProId = service.Context.Get(ctx).User.ProductIds
+	}
+
 	res, err := service.ProductStageKpi.GetList(r.Context(), input)
 	if err != nil {
 		response.JsonExit(r, response.GetListFailProductStageKpi, err.Error())

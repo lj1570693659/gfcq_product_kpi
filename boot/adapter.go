@@ -27,27 +27,25 @@ func init() {
 		log.Fatalf("Casbin init failure:%s \n", err.Error())
 	}
 
-	// TODO
 	Enforcer.AddFunction("my_func", KeyMatchFunc)
 }
 
 // KeyMatch 我们当然也可以定义自己的函数。先定义一个函数，返回 bool：
-func KeyMatch(requestKey, ruleKey, requestAct, ruleAct string) bool {
+func KeyMatch(requestAct, ruleAct string) bool {
+	g.Log("auth").Info(context.Background(), requestAct, ruleAct)
+	fmt.Println("requestAct--------------------------", requestAct)
+	fmt.Println("ruleAct--------------------------", ruleAct)
+	if requestAct == ruleAct {
+		return true
+	}
 
-	fmt.Println("eeeeeeeeeeeeeeeee------request----------", requestKey)
-	fmt.Println("eeeeeeeeeeeeeeeee-------rule---------", ruleKey)
-	fmt.Println("eeeeeeeeeeeeeeeee-------requestAct---------", requestAct)
-	fmt.Println("eeeeeeeeeeeeeeeee-------ruleAct---------", ruleAct)
-
-	return true
+	return false
 }
 
 // KeyMatchFunc 然后将这个函数用interface{}类型包装一层：
 func KeyMatchFunc(args ...interface{}) (interface{}, error) {
 	name1 := args[0].(string)
 	name2 := args[1].(string)
-	name3 := args[2].(string)
-	name4 := args[3].(string)
 
-	return (bool)(KeyMatch(name1, name2, name3, name4)), nil
+	return (bool)(KeyMatch(name1, name2)), nil
 }

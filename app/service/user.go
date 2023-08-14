@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/util/gconv"
@@ -11,8 +10,8 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/lj1570693659/gfcq_product_kpi/app/dao"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
-	"github.com/lj1570693659/gfcq_product_kpi/app/model/entity"
 	"github.com/lj1570693659/gfcq_product_kpi/library/util"
+	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 )
 
 // User 中间件管理服务
@@ -45,29 +44,32 @@ func (s *userService) IsSignedIn(ctx context.Context) bool {
 
 // SignIn 用户登录，成功返回用户信息，否则返回nil; WorkNumber应当会md5值字符串
 func (s *userService) SignIn(ctx context.Context, WorkNumber, password string) (model.Employee, error) {
-	var user *entity.User
+	sessionUser := &model.User{}
 	userInfo := model.Employee{}
-	err := dao.User.Ctx(ctx).Where(dao.User.Columns().WorkNumber, WorkNumber).Where(dao.User.Columns().Password, util.Encrypt(password)).Scan(&user)
+	err := dao.User.Ctx(ctx).Where(dao.User.Columns().WorkNumber, WorkNumber).Where(dao.User.Columns().Password, util.Encrypt(password)).Scan(&sessionUser)
+	if !g.IsNil(err) && err.Error() == sql.ErrNoRows.Error() {
+		return userInfo, errors.New("用户账号或密码错误")
+	}
 	if err != nil {
 		return userInfo, err
 	}
-	if user == nil {
-		return userInfo, errors.New("账号或密码错误")
-	}
-	sessionUser := &model.User{}
-	sessionUserByte, _ := json.Marshal(user)
-	json.Unmarshal(sessionUserByte, &sessionUser)
+
+	g.Log("login").Info(ctx, fmt.Sprintf("用户：%s，信息：%v", sessionUser.WorkNumber, sessionUser))
 	if err := Session.SetUser(ctx, sessionUser); err != nil {
 		return userInfo, err
 	}
 	Context.SetUserInfo(ctx, &model.UserInfo{
-		Id:         gconv.Uint(user.Id),
-		WorkNumber: user.WorkNumber,
-		UserName:   user.UserName,
+		Id:         gconv.Uint(sessionUser.Id),
+		WorkNumber: sessionUser.WorkNumber,
+		UserName:   sessionUser.UserName,
 	})
 
-	employeeInfo, err := Employee.GetOne(ctx, &model.EmployeeApiGetOneReq{model.Employee{WorkNumber: user.WorkNumber}})
-	if err != nil {
+	employeeInfo, err := Employee.GetOne(ctx, &model.EmployeeApiGetOneReq{model.Employee{WorkNumber: sessionUser.WorkNumber}})
+	if err != nil && rpctypes.ErrorDesc(err) == sql.ErrNoRows.Error() {
+		g.Log("login").Info(ctx, fmt.Sprintf("用户：%s，未完善员工信息", sessionUser.WorkNumber))
+		employeeInfo.EmployeeInfo.WorkNumber = sessionUser.WorkNumber
+		employeeInfo.EmployeeInfo.UserName = sessionUser.UserName
+	} else if err != nil {
 		return userInfo, err
 	}
 	g.Log("login").Info(ctx, employeeInfo)

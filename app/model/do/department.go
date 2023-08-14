@@ -15,6 +15,7 @@ type Department struct {
 	Id         interface{} //
 	Name       interface{} // 部门名称
 	Pid        interface{} // 上级部门
+	Level      interface{} // 部门层级
 	Remark     interface{} // 预留备注信息
 	CreateTime *gtime.Time // 数据新增时间
 	UpdateTime *gtime.Time // 最后一次更新数据时间
