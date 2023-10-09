@@ -86,7 +86,7 @@ func (s *productRolesService) getProductRolesTreeNode(ctx context.Context, perms
 		}
 		info := make([]model.ProductRolesApiGetList, 0)
 		gconv.Scan(getChild.GetData(), &info)
-		perms[k].ChildLevel = info
+		perms[k].Children = info
 
 		s.getProductRolesTreeNode(ctx, info)
 	}

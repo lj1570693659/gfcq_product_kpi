@@ -2,7 +2,6 @@ package boot
 
 import (
 	"context"
-	"fmt"
 	casbin "github.com/dobyte/gf-casbin"
 	"github.com/gogf/gf/v2/frame/g"
 	"log"
@@ -33,8 +32,6 @@ func init() {
 // KeyMatch 我们当然也可以定义自己的函数。先定义一个函数，返回 bool：
 func KeyMatch(requestAct, ruleAct string) bool {
 	g.Log("auth").Info(context.Background(), requestAct, ruleAct)
-	fmt.Println("requestAct--------------------------", requestAct)
-	fmt.Println("ruleAct--------------------------", ruleAct)
 	if requestAct == ruleAct {
 		return true
 	}

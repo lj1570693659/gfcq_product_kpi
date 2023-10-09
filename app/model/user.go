@@ -13,6 +13,11 @@ import (
 type User internal.User
 type UserLog entity.UserLog
 
+type UserProfileInfo struct {
+	User     *User     `json:"user"`
+	Employee *Employee `json:"employee"`
+}
+
 // UserApiSignUpReq 注册请求参数，用于前后端交互参数格式约定
 type UserApiSignUpReq struct {
 	WorkNumber string `v:"required|length:6,16#账号不能为空|账号长度应当在:min到:max之间"`

@@ -32,9 +32,20 @@ func init() {
 
 				})
 			})
-			// 组织管理 TODO
+			// 组织管理
 			sg.Group("/organize", func(sgo *ghttp.RouterGroup) {
-				// 部门、职级、员工 TODO
+				// 部门、职级、员工 无需鉴权部分
+				sgo.Group("/employee", func(sgoe *ghttp.RouterGroup) {
+					sgoe.GET("/all", api.Employee.GetAll)
+					sgoe.GET("/lists", api.Employee.GetList)
+				})
+				sgo.Group("/level", func(lgo *ghttp.RouterGroup) {
+					lgo.GET("/all", api.JobLevel.GetAll)
+				})
+				sgo.Group("/department", func(dgo *ghttp.RouterGroup) {
+					dgo.GET("/lists", api.Department.GetList)
+				})
+
 				// 员工信息相关
 				sgo.Group("/employee", func(sgoe *ghttp.RouterGroup) {
 					sgoe.Middleware(service.Middleware.LoggedIn)
@@ -42,13 +53,10 @@ func init() {
 					sgoe.POST("/create", api.Employee.Create)
 					sgoe.PUT("/modify", api.Employee.Modify)
 					sgoe.GET("/info", api.Employee.GetOne)
-					sgoe.GET("/lists", api.Employee.GetList)
-					sgoe.GET("/all", api.Employee.GetAll)
 				})
 				// 部门信息
 				sgo.Group("/department", func(dgo *ghttp.RouterGroup) {
 					dgo.Middleware(service.Middleware.Role, service.Middleware.BusinessRole)
-					dgo.GET("/lists", api.Department.GetList)
 					dgo.GET("/info", api.Department.GetOne)
 					dgo.POST("/create", api.Department.Create)
 					dgo.PUT("/modify", api.Department.Modify)
@@ -59,19 +67,17 @@ func init() {
 					lgo.Middleware(service.Middleware.Role, service.Middleware.BusinessRole)
 					lgo.GET("/lists", api.JobLevel.GetList)
 					lgo.GET("/info", api.JobLevel.GetOne)
-					lgo.GET("/all", api.JobLevel.GetAll)
 					lgo.POST("/create", api.JobLevel.Create)
 					lgo.PUT("/modify", api.JobLevel.Modify)
 					lgo.DELETE("/delete", api.JobLevel.Delete)
 				})
 				// 岗位信息
 				sgo.Group("/job", func(jgo *ghttp.RouterGroup) {
-					//jgo.GET("/lists", api.JobLevel.GetList)
-					//jgo.GET("/info", api.JobLevel.GetOne)
+					jgo.GET("/lists", api.Job.GetList)
 					jgo.GET("/all", api.Job.GetAll)
-					//jgo.POST("/create", api.JobLevel.Create)
-					//jgo.PUT("/modify", api.JobLevel.Modify)
-					//jgo.DELETE("/delete", api.JobLevel.Delete)
+					jgo.POST("/create", api.Job.Create)
+					jgo.PUT("/modify", api.Job.Modify)
+					jgo.DELETE("/delete", api.Job.Delete)
 				})
 			})
 		})
@@ -198,7 +204,6 @@ func init() {
 				agp.PUT("/modify", api.ProductStageKpi.Modify)
 				agp.GET("/lists", api.ProductStageKpi.GetList)
 				agp.GET("/info", api.ProductStageKpi.GetOne)
-				//agp.DELETE("/delete", api.LevelAssess.Delete)
 				// 阶段团队成员绩效
 				agp.Group("/member", func(amgp *ghttp.RouterGroup) {
 					amgp.POST("/export", api.ProductMemberKpi.Export)
@@ -219,12 +224,8 @@ func init() {
 				// 阶段团队成员激励计算
 				agp.Group("/prize", func(apgp *ghttp.RouterGroup) {
 					apgp.POST("/compute", api.ProductMemberPrize.Compute)
-					//apgp.POST("/export", api.ProductMemberPrize.Export)
-					//amgp.POST("/create", api.ProductMemberKpi.Create)
-					//amgp.PUT("/modify", api.ProductMemberKpi.Modify)
+					apgp.POST("/export", api.ProductMemberPrize.Export)
 					apgp.GET("/lists", api.ProductMemberPrize.GetList)
-					//amgp.GET("/info", api.ProductMemberKpi.GetOne)
-					//agp.DELETE("/delete", api.LevelAssess.Delete)
 				})
 			})
 
@@ -249,17 +250,11 @@ func init() {
 				pmg.GET("/info", api.ProductMember.GetOne)
 				pmg.POST("/create", api.ProductMember.Create)
 				pmg.PUT("/modify", api.ProductMember.Modify)
-				// TODO 删除成员信息
-				//pmg.DELETE("/modify", api.ProductMember.Modify)
+				pmg.DELETE("/delete", api.ProductMember.Delete)
 			})
-			// 项目阶段信息 TODO
+			// 项目阶段信息
 			pg.Group("/stage", func(psg *ghttp.RouterGroup) {
 				psg.GET("/all/{proId}", api.ProductStage.GetList)
-				//pmg.GET("/info", api.ProductMember.GetOne)
-				//pmg.POST("/create", api.ProductMember.Create)
-				//pmg.PUT("/modify", api.ProductMember.Modify)
-				// TODO 删除成员信息
-				//pmg.DELETE("/modify", api.ProductMember.Modify)
 			})
 		})
 

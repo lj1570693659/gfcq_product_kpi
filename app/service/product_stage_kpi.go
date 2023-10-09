@@ -273,8 +273,9 @@ func (s *productStageKpiService) completeInputData(ctx context.Context, in *mode
 	// PM绩效等级比例
 
 	// 根据PM绩效得分获取绩效等级
+	fmt.Println("KpiRuleLists---------------", KpiRuleLists)
 	res.PmKpiLevelId = util.GetKpiRuleByScore(KpiRuleLists, res.PmKpiLevelScore)
-
+	fmt.Println("KpiRuleLists---------------", res.PmKpiLevelId)
 	kpiLevel, err := dao.CrewKpiRule.GetOne(ctx, model.CrewKpiRule{Id: res.PmKpiLevelId})
 	if err != nil {
 		return res, err

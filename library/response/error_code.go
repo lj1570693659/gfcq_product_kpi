@@ -20,6 +20,7 @@ const (
 
 	DepartmentFailEmployee = 3002
 	JobLevelFailEmployee   = 3012
+	JobFailEmployee        = 3112
 	FormatFailType         = 3022
 	FormatFailMode         = 3032
 	FormatFailProductRoles = 3042
@@ -76,6 +77,7 @@ const (
 	ModifyFailProductMemberPrize  = 6124
 	GetListFailProductMemberPrize = 6125
 	GetOneFailProductMemberPrize  = 6126
+	ExportFailProductMemberPrize  = 6127
 	// FormatFailProductMemberKey 项目成员关键事件
 	FormatFailProductMemberKey  = 6132
 	CreateFailProductMemberKey  = 6133

@@ -9,6 +9,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/boot"
+	"github.com/lj1570693659/gfcq_product_kpi/consts"
 	"github.com/lj1570693659/gfcq_product_kpi/library/util"
 	"strings"
 )
@@ -40,7 +41,7 @@ var (
 type casbinService struct{}
 
 func (s *casbinService) CheckAuth(ctx context.Context, user *model.ContextUser, r *ghttp.Request, checkDimension string) (ok bool, err error) {
-	if g.IsEmpty(user.EmployeeInfo) {
+	if g.IsNil(user) || g.IsEmpty(user.EmployeeInfo) {
 		return false, errors.New("请先完善员工信息")
 	}
 
@@ -48,17 +49,59 @@ func (s *casbinService) CheckAuth(ctx context.Context, user *model.ContextUser, 
 	authLevel := LevelLow
 	for _, v := range user.DepartmentInfo {
 		if v.Level < gconv.Uint(authLevel) {
-			authLevel = v.Pid
+			authLevel = gconv.Int(v.Level)
 		}
 	}
 
+	// 2: 项目权限管理
+	isPm := consts.IsNotPm
+	//if checkDimension == BUSINESS_ROLE {
+	if authLevel == LevelLow {
+		if len(user.ProductMemberList) > 0 {
+			proIds := make([]uint, 0)
+			for _, v := range user.ProductMemberList {
+				proIds = append(proIds, v.ProId)
+				if v.IsSpecial == consts.IsPm {
+					isPm = consts.IsPm
+				}
+			}
+			Context.SetUserProductIds(ctx, proIds)
+			Context.SetUserProductRole(ctx, isPm)
+		}
+	}
+
+	//}
+
+	g.Log("auth").Info(ctx, fmt.Sprintf("用户：%s，权限级别为：%d, 所在部门信息：%v", user.EmployeeInfo.WorkNumber, authLevel, user.DepartmentInfo))
 	Context.SetUserRoleLevel(ctx, authLevel)
-	routerPath := []string{"system/account", "system/organize", "config/product", "config/inspirit", "achieve/product", "product/lists", "product/all", "statistics"}
+	routerPath := []string{
+		"system/account",
+		"system/organize",
+		"config/product",
+		"config/inspirit",
+		"achieve/product",
+		"product/lists",
+		"product/info",
+		"product/all",
+		"product/detail",
+		"product/create",
+		"product/delete",
+		"product/modify",
+		"product/member",
+		"product/stage",
+		"statistics/summation",
+		"statistics/product",
+		"statistics/level",
+	}
 	for _, v := range routerPath {
 		if authLevel < LevelLow {
 			ok, err = boot.Enforcer.AddPolicy(user.EmployeeInfo.WorkNumber, gconv.String(v), ACT_WRITE)
+			ok, err = boot.Enforcer.AddPolicy(user.EmployeeInfo.WorkNumber, gconv.String(v), ACT_READ)
 		} else {
 			ok, err = boot.Enforcer.AddPolicy(user.EmployeeInfo.WorkNumber, gconv.String(v), ACT_READ)
+			if Context.Get(ctx).User.ProductRole == consts.IsPm {
+				ok, err = boot.Enforcer.AddPolicy(user.EmployeeInfo.WorkNumber, gconv.String(v), ACT_WRITE)
+			}
 		}
 		if err != nil {
 			g.Log("auth").Error(ctx, errors.New(fmt.Sprintf("员工：%s, 注册权限失败,失败原因：%v", user.EmployeeInfo.WorkNumber, err)))
@@ -67,27 +110,28 @@ func (s *casbinService) CheckAuth(ctx context.Context, user *model.ContextUser, 
 	}
 
 	urlPath := util.DeleteIntSlice(strings.Split(r.URL.Path, "/"))
-	fmt.Println("urlPath--------------", urlPath)
 	if r.Method == "GET" {
 		ok, err = boot.Enforcer.Enforce(user.EmployeeInfo.WorkNumber, fmt.Sprintf("%s/%s", urlPath[0], urlPath[1]), ACT_READ)
 	} else {
 		ok, err = boot.Enforcer.Enforce(user.EmployeeInfo.WorkNumber, fmt.Sprintf("%s/%s", urlPath[0], urlPath[1]), ACT_WRITE)
 	}
 	if !ok {
+		g.Log("auth").Info(ctx, errors.New(fmt.Sprintf("员工：%s, 权限校验失败, 访问路径：%v, 失败原因：%v", user.EmployeeInfo.WorkNumber, fmt.Sprintf("%s/%s", urlPath[0], urlPath[1]), err)))
 		return ok, err
 	}
 
-	// 2: 项目权限管理
-	if checkDimension == BUSINESS_ROLE {
-		if authLevel == LevelLow && len(user.ProductMemberList) > 0 {
-			proIds := make([]uint, 0)
-			for _, v := range user.ProductMemberList {
-				proIds = append(proIds, v.ProId)
-			}
-			Context.SetUserProductIds(r.Context(), proIds)
-		}
-
-	}
-
 	return ok, err
+}
+
+func (s *casbinService) CheckProductAuth(ctx context.Context, id uint) bool {
+	if Context.Get(ctx).User.ProductRole == consts.IsPm {
+		if util.CheckIn(Context.Get(ctx).User.ProductIds, id) {
+			return true
+		}
+	} else {
+		if Context.Get(ctx).User.RoleLevel < LevelLow {
+			return true
+		}
+	}
+	return false
 }

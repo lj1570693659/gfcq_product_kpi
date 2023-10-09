@@ -42,7 +42,7 @@ func (a *employeeApi) GetOne(r *ghttp.Request) {
 
 	res, err := service.Employee.GetOne(r.Context(), input)
 	if err != nil {
-		response.JsonExit(r, response.CreateFailEmployee, err.Error())
+		response.JsonExit(r, response.NotSyncEmployee, err.Error())
 	} else {
 		response.JsonExit(r, response.Success, "ok", res)
 	}

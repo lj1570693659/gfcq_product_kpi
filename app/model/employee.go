@@ -42,9 +42,10 @@ type EmployeeApiDeleteReq struct {
 
 // EmployeeApiGetListReq 员工信息列表
 type EmployeeApiGetListReq struct {
-	Page     int32    `json:"page"` // 员工姓名
-	Size     int32    `json:"size"` // 员工姓名
-	Employee Employee `json:"employee"`
+	Employee
+	Page int32 `json:"page"` // 员工姓名
+	Size int32 `json:"size"` // 员工姓名
+	//Employee Employee `json:"employee"`
 }
 
 // EmployeeApiGetOneReq 员工信息列表

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/v2/database/gdb"
@@ -15,6 +16,7 @@ import (
 	"github.com/lj1570693659/gfcq_product_kpi/library/util"
 	common "github.com/lj1570693659/gfcq_protoc/common/v1"
 	v1 "github.com/lj1570693659/gfcq_protoc/config/inspirit/v1"
+	"time"
 )
 
 var ProductMemberPrize = productMemberPrizeService{}
@@ -183,9 +185,7 @@ func (s *productMemberPrizeService) PmBaseIndexChange(ctx context.Context, in *m
 		KpiRadio:       productStageKpi.PmKpiLevelRadio,
 		SentQueto:      productStageKpi.PmIncentiveQuota,
 	}
-	fmt.Println("pm.data----------------", data)
-	fmt.Println("pm.getPmPrize----------------", getPmPrize)
-	fmt.Println("pm.productStageKpi----------------", productStageKpi)
+
 	if g.IsEmpty(getPmPrize.Id) {
 		getPmPrize, err = dao.ProductMemberPrize.Create(ctx, data)
 		if err != nil {
@@ -282,7 +282,7 @@ func (s *productMemberPrizeService) GetList(ctx context.Context, in model.Produc
 			info := model.ProductMemberPrizeApiGetListRes{
 				ProductMemberPrize: v,
 			}
-			info.ProductMemberKpi, err = dao.ProductMemberKpi.GetOne(ctx, model.ProductMemberKpi{ProEmpId: v.ProEmpId})
+			info.ProductMemberKpi, err = dao.ProductMemberKpi.GetOne(ctx, model.ProductMemberKpi{ProEmpId: v.ProEmpId, ProStageId: v.ProStageId})
 			if err != nil {
 				return res, err
 			}
@@ -305,4 +305,110 @@ func (s *productMemberPrizeService) GetList(ctx context.Context, in model.Produc
 
 	res.Data = resData
 	return res, nil
+}
+
+func (s *productMemberPrizeService) GetAll(ctx context.Context, in model.ProductMemberPrize) (resData []model.ProductMemberPrizeApiGetListRes, err error) {
+	resData = make([]model.ProductMemberPrizeApiGetListRes, 0)
+	entity, err := dao.ProductMemberPrize.GetAll(ctx, in)
+	if err != nil {
+		return resData, err
+	}
+
+	// 部门清单
+	departmentList, err := boot.DepertmentServer.GetListWithoutPage(ctx, &common.GetListWithoutDepartmentReq{})
+	if err != nil {
+		return resData, err
+	}
+
+	if len(entity) > 0 {
+		for _, v := range entity {
+			info := model.ProductMemberPrizeApiGetListRes{}
+			prizeByte, _ := json.Marshal(v)
+			json.Unmarshal(prizeByte, &info.ProductMemberPrize)
+			info.ProductMemberKpi, err = dao.ProductMemberKpi.GetOne(ctx, model.ProductMemberKpi{ProEmpId: v.ProEmpId})
+			if err != nil {
+				return resData, err
+			}
+
+			// 项目组成员信息
+			info.ProductMember, err = ProductMember.GetOne(ctx, &model.ProductMemberApiGetOneReq{model.ProductMember{Id: v.ProEmpId}})
+			if err != nil {
+				return resData, err
+			}
+
+			empInfo, err := boot.EmployeeServer.GetOne(ctx, &common.GetOneEmployeeReq{Id: gconv.Int32(info.ProductMember.EmpId)})
+			if err != nil {
+				return resData, err
+			}
+			info.UserName = empInfo.GetEmployee().GetUserName()
+			info.DepartmentName = Department.GetDepartmentName(empInfo.GetEmployee().GetDepartId(), departmentList.GetData())
+			resData = append(resData, info)
+		}
+	}
+	return resData, nil
+}
+
+// Export
+func (s *productMemberPrizeService) Export(ctx context.Context, in *model.ProductMemberWhere) (string, error) {
+	excelData := make([]map[string]interface{}, 0)
+
+	// 数据清单
+	memberPrizeList, err := s.GetAll(ctx, model.ProductMemberPrize{
+		ProId:      in.ProId,
+		ProStageId: in.ProStageId,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	fileName := "项目成员绩效奖金"
+	if len(memberPrizeList) > 0 {
+		for k, v := range memberPrizeList {
+			fmt.Println("ProductMemberKpi--------------------", v.ProductMemberKpi)
+			fmt.Println("ProductMemberPrize--------------------", v.ProductMemberPrize)
+			excelData = append(excelData, map[string]interface{}{
+				"A": k + 1,                                      // 序号
+				"B": v.ProductMemberKpi.PrName,                  // 项目角色
+				"C": v.ProductMember.WorkNumber,                 // 工号
+				"D": v.UserName,                                 // 姓名
+				"E": v.ProductMember.Type,                       // 属性
+				"F": v.DepartmentName,                           // 部门
+				"G": v.ProductMember.PutInto,                    // 投入占比
+				"H": v.ProductMember.DutyIndex,                  // 责任系数
+				"I": v.ProductMember.JbName,                     // 职级
+				"J": v.ProductMember.SpecificDuty,               // 职责和任务
+				"K": v.ProductMember.WorkAddress,                // 工作地
+				"L": util.GetIsGuide(v.ProductMember.IsGuide),   // 主导方
+				"M": util.GetIsGuide(v.ProductMember.IsSupport), // 支持方
+				"N": v.ProductMemberKpi.OvertimeRadio,           // 工时占比
+				"O": v.ProductMemberKpi.KpiLevel,                // 绩效等级
+				"P": v.ProductMemberKpi.FloatRaio,               // 浮动贡献
+				"Q": v.ProductMemberPrize.OvertimeIndex,         // 工时指数
+				"R": v.ProductMemberPrize.DutyIndex,             // 责任指数
+				"S": v.ProductMemberPrize.ManageIndex,           // 管理指数
+				"T": v.ProductMemberPrize.WeightPmoRadio,        // 权重基准
+				"U": v.ProductMemberPrize.SentBase,              // 发放基数
+				"V": v.ProductMemberPrize.KpiRadio,              // 绩效比例
+				"W": v.ProductMemberPrize.SentQueto,             // 实发额度
+			})
+		}
+
+	}
+
+	// 保存Excel文件
+	return s.setCellValue(ctx, excelData, fileName)
+}
+
+// setCellValue 保存Excel文件
+func (s *productMemberPrizeService) setCellValue(ctx context.Context, data []map[string]interface{}, productName string) (string, error) {
+	titleList := []string{"序号", "项目角色", "工号", "姓名", "属性", "部门", "投入占比", "责任指数", "职级", "责任和职务", "工作地",
+		"主导方", "支持方", "工时占比", "绩效等级", "浮动贡献", "工时指数", "责任指数", "管理指数", "权重基准", "发放基数", "绩效比例", "实发额度"}
+	sheetName := "Sheet1"
+	fileName := fmt.Sprintf("/excel/%s-%s.xlsx", productName, time.Now().Format("2006-01-02"))
+	filepath := fmt.Sprintf("./public/%s", fileName)
+	if err := util.ExportExcel(titleList, data, sheetName, filepath); err != nil {
+		g.Log("excel").Error(ctx, err)
+	}
+
+	return fileName, nil
 }

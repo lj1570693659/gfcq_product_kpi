@@ -70,7 +70,7 @@ func (s *productMemberDao) GetList(ctx context.Context, in *model.ProductMemberG
 		return res, dataEntity, err
 	}
 
-	if err = query.Scan(&dataEntity); err != nil {
+	if err = query.OrderDesc(ProductMember.Columns().Id).Scan(&dataEntity); err != nil {
 		return res, dataEntity, err
 	}
 
@@ -180,4 +180,18 @@ func (s *productMemberDao) Modify(ctx context.Context, in *model.ProductMember) 
 	}
 
 	return in, nil
+}
+
+func (s *productMemberDao) Delete(ctx context.Context, id uint) (bool, error) {
+	query := s.Ctx(ctx)
+
+	if id > 0 {
+		query = query.Where(s.Columns().Id, id)
+	}
+	_, err := query.Delete()
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

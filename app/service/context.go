@@ -37,7 +37,7 @@ func (s *contextService) SetUserInfo(ctx context.Context, ctxUser *model.UserInf
 }
 
 // SetUserEmployee 将上下文信息设置到上下文请求中，注意是完整覆盖
-func (s *contextService) SetUserEmployee(ctx context.Context, ctxUser model.Employee) {
+func (s *contextService) SetUserEmployee(ctx context.Context, ctxUser *model.Employee) {
 	s.Get(ctx).User.EmployeeInfo = ctxUser
 }
 
@@ -64,4 +64,9 @@ func (s *contextService) SetUserProductIds(ctx context.Context, productIds []uin
 // SetUserRoleLevel 将上下文信息设置到上下文请求中，注意是完整覆盖
 func (s *contextService) SetUserRoleLevel(ctx context.Context, roleLevel int) {
 	s.Get(ctx).User.RoleLevel = roleLevel
+}
+
+// SetUserProductRole 将上下文信息设置到上下文请求中，注意是完整覆盖
+func (s *contextService) SetUserProductRole(ctx context.Context, roleName int) {
+	s.Get(ctx).User.ProductRole = roleName
 }

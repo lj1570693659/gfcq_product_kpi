@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/lj1570693659/gfcq_product_kpi/app/dao"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model/entity"
@@ -43,13 +44,18 @@ func (s *userLogService) SaveLogData(ctx context.Context, cookie *ghttp.Cookie, 
 
 	data.ChangeTypeName = util.GetUserRequestTypeName(data.MethodName, requestModuleLists)
 	data.RequestBody = gconv.String(requestData)
-
+	data.CreateTime = gtime.Now()
+	data.UpdateTime = gtime.Now()
 	err := dao.UserLog.Create(ctx, data)
 	return err
 }
 
 // GetList 日志管理清单
 func (s *userLogService) GetList(ctx context.Context, in *model.UserLogApiReq) (res *response.GetListResponse, err error) {
+	if len(Context.Get(ctx).User.UserInfo.WorkNumber) > 0 {
+		in.WorkNumber = Context.Get(ctx).User.UserInfo.WorkNumber
+	}
+
 	res, _, err = dao.UserLog.GetList(ctx, in)
 	return res, err
 }

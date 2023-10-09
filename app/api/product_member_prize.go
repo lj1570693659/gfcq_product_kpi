@@ -12,26 +12,26 @@ var ProductMemberPrize = new(productMemberPrizeApi)
 
 type productMemberPrizeApi struct{}
 
-// Export SignUp @summary 团队成员信息导出
+// Export SignUp @summary 团队成员奖金导出
 // @tags    团队成员激励
 // @produce json
 // @param   entity  body model.ProductMemberExport true "团队成员信息导出"
-// @router  /achieve/product/member/export [POST]
+// @router  /achieve/product/prize/export [POST]
 // @success 200 {object} response.JsonResponse "团队激励"
 func (a *productMemberPrizeApi) Export(r *ghttp.Request) {
-	//var input *model.ProductMemberExport
-	//
-	//if err := r.Parse(&input); err != nil {
-	//	response.JsonExit(r, response.FormatFailProductMemberPrize, err.Error())
-	//}
-	//
-	//filepath, err := service.ProductMemberPrize.Export(r.Context(), input)
-	////r.Response.ServeFileDownload(filepath)
-	//if err != nil {
-	//	response.JsonExit(r, response.CreateFailProductStagePrize, err.Error())
-	//} else {
-	//	response.JsonExit(r, response.Success, "ok", filepath)
-	//}
+	var input *model.ProductMemberWhere
+
+	if err := r.Parse(&input); err != nil {
+		response.JsonExit(r, response.FormatFailProductMemberPrize, err.Error())
+	}
+
+	filepath, err := service.ProductMemberPrize.Export(r.Context(), input)
+
+	if err != nil {
+		response.JsonExit(r, response.ExportFailProductMemberPrize, err.Error())
+	} else {
+		response.JsonExit(r, response.Success, "ok", filepath)
+	}
 }
 
 // Compute SignUp @summary 增加团队成员激励

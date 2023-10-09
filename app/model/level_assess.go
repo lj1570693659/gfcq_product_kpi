@@ -37,5 +37,5 @@ type LevelAssessApiGetList struct {
 	Weight             float64                 `json:"weight"             ` // 权重
 	Remark             string                  `json:"remark"             ` // 预留备注说明信息
 	EmployeeCount      int32                   `json:"employeeCount"`       // 员工数量
-	ChildLevel         []LevelAssessApiGetList `json:"childLevel"`          // 子级评估信息
+	Children           []LevelAssessApiGetList `json:"children"`            // 子级评估信息
 }

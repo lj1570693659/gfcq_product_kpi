@@ -40,14 +40,14 @@ func (s *employeeService) GetList(ctx context.Context, input *model.EmployeeApiG
 	// 员工主体信息
 	where := &v1.EmployeeInfo{
 		Id:         gconv.Int32(input.Employee.Id),
-		UserName:   input.Employee.UserName,
-		WorkNumber: input.Employee.WorkNumber,
-		Phone:      input.Employee.Phone,
-		Email:      input.Employee.Email,
-		DepartId:   input.Employee.DepartId,
-		JobId:      input.Employee.JobId,
-		JobLevel:   gconv.Int32(input.Employee.JobLevel),
-		Status:     v1.StatusEnum(input.Employee.Status),
+		UserName:   input.UserName,
+		WorkNumber: input.WorkNumber,
+		Phone:      input.Phone,
+		Email:      input.Email,
+		DepartId:   input.DepartId,
+		JobId:      input.JobId,
+		JobLevel:   gconv.Int32(input.JobLevel),
+		Status:     v1.StatusEnum(input.Status),
 	}
 
 	res, err := boot.EmployeeServer.GetList(ctx, &v1.GetListEmployeeReq{
@@ -66,7 +66,7 @@ func (s *employeeService) GetList(ctx context.Context, input *model.EmployeeApiG
 			info.SexName = util.GetEmploySex(v.GetSex())
 			// 部门
 			departmentList := make([]entity.Department, 0)
-			departmentIds := gconv.Int32s(strings.Split(v.DepartId, ","))
+			departmentIds := util.DeleteInt32Slice(gconv.Int32s(strings.Split(v.DepartId, ",")))
 			departmentName := make([]string, 0)
 			if len(departmentIds) > 0 {
 				for _, departId := range departmentIds {
@@ -118,7 +118,6 @@ func (s *employeeService) GetList(ctx context.Context, input *model.EmployeeApiG
 				if err != nil {
 					return apiRes, err
 				}
-				fmt.Println("jobLevel=============", jobLevel)
 				info.LevelInfo = model.JobLevel{
 					Name: jobLevel.GetJobLevel().GetName(),
 				}
@@ -225,7 +224,7 @@ func (s *employeeService) GetOne(ctx context.Context, input *model.EmployeeApiGe
 		// 员工所在部门信息
 		departmentList := make([]entity.Department, 0)
 		departmentName := make([]string, 0)
-		res.DepartmentIds = gconv.Int32s(strings.Split(employeeInfo.Employee.DepartId, ","))
+		res.DepartmentIds = util.DeleteInt32Slice(gconv.Int32s(strings.Split(employeeInfo.Employee.DepartId, ",")))
 		if len(res.DepartmentIds) > 0 {
 			for _, departId := range res.DepartmentIds {
 				departmentInfo, err := boot.DepertmentServer.GetOne(ctx, &v1.GetOneDepartmentReq{

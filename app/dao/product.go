@@ -86,7 +86,7 @@ func (s *productDao) GetList(ctx context.Context, in *model.ProductApiGetListReq
 		return res, productEntity, err
 	}
 
-	if err = query.Scan(&productEntity); err != nil {
+	if err = query.OrderDesc(Product.Columns().Id).Scan(&productEntity); err != nil {
 		return res, productEntity, err
 	}
 
@@ -212,6 +212,6 @@ func (s *productDao) GetAll(ctx context.Context, in model.ProductWhere) (res []m
 		query = query.WhereIn(s.Columns().Status, in.PmId)
 	}
 
-	err = query.Scan(&res)
+	err = query.OrderDesc(Product.Columns().Id).Scan(&res)
 	return res, err
 }

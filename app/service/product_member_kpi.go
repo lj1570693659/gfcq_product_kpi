@@ -134,7 +134,7 @@ func (s *productMemberKpiService) Export(ctx context.Context, in *model.ProductM
 // setCellValue 保存Excel文件
 func (s *productMemberKpiService) setCellValue(ctx context.Context, data []map[string]interface{}, productName string) (string, error) {
 	titleList := []string{"序号", "项目角色", "工号", "姓名", "分类", "部门", "投入占比", "责任指数", "职级", "责任和职务", "工作地",
-		"主导方", "支持方", "备注", "管理指数", "工时占比", "浮动贡献", "绩效等级", "关键事件分类", "事件描述", "处理结果", "发生时间"}
+		"主导方", "支持方", "备注", "管理指数", "工时占比", "浮动贡献", "绩效得分", "关键事件分类", "事件描述", "处理结果", "发生时间"}
 	sheetName := "Sheet1"
 	fileName := fmt.Sprintf("/excel/%s-%s.xlsx", productName, time.Now().Format("2006-01-02"))
 	filepath := fmt.Sprintf("./public/%s", fileName)
@@ -160,10 +160,17 @@ func (s *productMemberKpiService) Import(ctx context.Context, in *model.ProductM
 		return err
 	}
 
-	err = s.saveProductMemberKpiFromExcel(ctx, saveDataFormat)
+	// 3: 查询项目经理信息
+	pmInfo, err := ProductMember.GetPmInfo(ctx, in.ProId)
+	if err != nil {
+		return err
+	}
+
+	err = s.saveProductMemberKpiFromExcel(ctx, saveDataFormat, pmInfo.GetEmployee())
 
 	// 同步项目经理数据
 	s.SyncPmKpi(ctx, in.ProId, in.StageId)
+
 	return err
 }
 
@@ -236,7 +243,7 @@ func (s *productMemberKpiService) checkInputData(ctx context.Context, in model.P
 			where.IsSpecial = consts.IsPm
 		}
 		memberInfo, err = dao.ProductMember.GetOne(ctx, where)
-		if err != nil && err.Error() != sql.ErrNoRows.Error() {
+		if err != nil {
 			return false, in, getInfo, err
 		}
 		in.WorkNumber = memberInfo.WorkNumber
@@ -269,16 +276,22 @@ func (s *productMemberKpiService) checkInputData(ctx context.Context, in model.P
 	return true, in, getInfo, nil
 }
 
-func (s *productMemberKpiService) saveProductMemberKpiFromExcel(ctx context.Context, excelData []model.ProductMemberKpiChangeReq) error {
+func (s *productMemberKpiService) saveProductMemberKpiFromExcel(ctx context.Context, excelData []model.ProductMemberKpiChangeReq, pmInfo *common.EmployeeInfo) error {
 	if len(excelData) == 0 {
 		return errors.New("文件内容为空，请先完善信息")
 	}
-
+	g.Log("memberKpi").Info(ctx, excelData)
 	return dao.ProductMemberKpi.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 		// 查询项目优先级确认配置信息
 		for _, v := range excelData {
-			if err := s.saveProductMemberKpi(ctx, v); err != nil {
-				return err
+			fmt.Println("excelData---------------------", v)
+			fmt.Println("excelData.WorkNumber---------------------", v.WorkNumber)
+			fmt.Println("excelData.IsPm---------------------", v.IsPm)
+			fmt.Println("pmInfo---------------------", pmInfo)
+			if v.WorkNumber != pmInfo.GetWorkNumber() {
+				if err := s.saveProductMemberKpi(ctx, v); err != nil {
+					return err
+				}
 			}
 		}
 		return nil

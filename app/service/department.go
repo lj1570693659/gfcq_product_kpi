@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"github.com/gogf/gf/util/gconv"
-	"github.com/lj1570693659/gfcq_product_kpi/app/dao"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/boot"
 	"github.com/lj1570693659/gfcq_product_kpi/library/util"
@@ -25,7 +24,7 @@ func (s *departmentService) GetList(ctx context.Context, input *model.Department
 		Department: &v1.DepartmentInfo{
 			Id:   gconv.Int32(input.Department.Id),
 			Name: input.Department.Name,
-			Pid:  -1,
+			//Pid:  -1,
 		},
 	})
 	if err != nil {
@@ -35,56 +34,40 @@ func (s *departmentService) GetList(ctx context.Context, input *model.Department
 	if len(getAll.GetData()) > 0 {
 		res = make([]model.DepartmentApiGetList, 0)
 		gconv.Scan(getAll.GetData(), &res)
-		_, res, _, _ = s.getDepartTreeNode(ctx, res, dao.EmployeeJob.Columns().EmployeeId, dao.EmployeeJob.Columns().EmployeeId)
-
+		for k, v := range res {
+			// 计算直属上级部门员工数量
+			var childCountSum int32
+			getCount, err := Employee.GetEmployeeCount(ctx, gconv.Int32(v.ID))
+			if err != nil {
+				return res, err
+			}
+			res[k].EmployeeCount = getCount.GetCount() + childCountSum
+		}
+		res = s.getDepartTreeNode(res, 0)
 	}
 	return res, nil
 }
 
 // getDepartTreeNode 递归获取部门子节点
-func (s *departmentService) getDepartTreeNode(ctx context.Context, perms []model.DepartmentApiGetList, GroupBy, GetFiledNameCount string) (context.Context, []model.DepartmentApiGetList, string, string) {
-	for k, v := range perms {
-		// 计算直属上级部门员工数量
-		var childCountSum int32
-		getCount, err := Employee.GetEmployeeCount(ctx, gconv.Int32(v.ID))
-		if err != nil {
-			return ctx, perms, GroupBy, GetFiledNameCount
-		}
-
-		// 计算下级部门
-		getChild, err := boot.DepertmentServer.GetListWithoutPage(ctx, &v1.GetListWithoutDepartmentReq{
-			Department: &v1.DepartmentInfo{
-				Pid: gconv.Int32(v.ID),
-			},
-		})
-		if err != nil {
-			return ctx, perms, GroupBy, GetFiledNameCount
-		}
-		info := make([]model.DepartmentApiGetList, 0)
-		gconv.Scan(getChild.GetData(), &info)
-		perms[k].Children = info
-
-		if len(info) > 0 {
-			for ik, iv := range info {
-				getCount, err := boot.EmployeeJobServer.GetCount(ctx, &v1.GetCountEmployeeJobReq{
-					EmployeeJob: &v1.EmployeeJobInfo{
-						DepartId: gconv.Int32(iv.ID),
-					},
-					GroupBy:           GroupBy,
-					GetFiledNameCount: GetFiledNameCount,
-				})
-				if err != nil {
-					return ctx, perms, GroupBy, GetFiledNameCount
-				}
-				info[ik].EmployeeCount = getCount.GetCount()
-				childCountSum += getCount.GetCount()
+func (s *departmentService) getDepartTreeNode(tree []model.DepartmentApiGetList, pid int) []model.DepartmentApiGetList {
+	// 获得列出商品分类
+	var goodArr []model.DepartmentApiGetList
+	for _, v := range tree {
+		if v.Pid == pid {
+			// 这里可以理解为每次都从最原始的数据里面找出相对就的ID进行匹配，直到找不到就返回
+			child := s.getDepartTreeNode(tree, v.ID)
+			node := model.DepartmentApiGetList{
+				ID:            v.ID,
+				Pid:           v.Pid,
+				Name:          v.Name,
+				EmployeeCount: v.EmployeeCount,
+				Children:      child,
 			}
+			goodArr = append(goodArr, node)
 		}
-
-		perms[k].EmployeeCount = getCount.GetCount() + childCountSum
-		s.getDepartTreeNode(ctx, info, GroupBy, GetFiledNameCount)
 	}
-	return ctx, perms, GroupBy, GetFiledNameCount
+	return goodArr
+
 }
 
 // GetOne 获取部门信息详情

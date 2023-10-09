@@ -64,7 +64,7 @@ func (s *userLogDao) GetList(ctx context.Context, in *model.UserLogApiReq) (res 
 		return res, productEntity, err
 	}
 
-	if err = query.Scan(&productEntity); err != nil {
+	if err = query.OrderDesc(UserLog.Columns().Id).Scan(&productEntity); err != nil {
 		return res, productEntity, err
 	}
 

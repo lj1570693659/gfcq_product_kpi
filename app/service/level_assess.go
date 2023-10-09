@@ -2,10 +2,14 @@ package service
 
 import (
 	"context"
+	"errors"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/boot"
+	"github.com/lj1570693659/gfcq_product_kpi/library/util"
 	v1 "github.com/lj1570693659/gfcq_protoc/config/product/v1"
+	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 )
 
 // LevelAssess 项目等级评估信息管理服务
@@ -60,7 +64,9 @@ func (s *levelAssessService) Create(ctx context.Context, input *model.LevelAsses
 		Weight:             gconv.Float32(input.Weight),
 		Remark:             input.Remark,
 	})
-
+	if !g.IsNil(err) {
+		return errors.New(rpctypes.ErrorDesc(err))
+	}
 	return err
 }
 
@@ -92,6 +98,7 @@ func (s *levelAssessService) Delete(ctx context.Context, input *model.LevelAsses
 func (s *levelAssessService) getLevelAccessTreeNode(ctx context.Context, perms []model.LevelAssessApiGetList) (context.Context, []model.LevelAssessApiGetList) {
 	//定义子节点
 	for k, v := range perms {
+		perms[k].Weight = util.Decimal(v.Weight)
 		// 计算下级部门
 		getChild, err := boot.LevelAssessServer.GetListWithoutPage(ctx, &v1.GetListWithoutLevelAssessReq{
 			LevelAssess: &v1.LevelAssessInfo{
@@ -103,7 +110,7 @@ func (s *levelAssessService) getLevelAccessTreeNode(ctx context.Context, perms [
 		}
 		info := make([]model.LevelAssessApiGetList, 0)
 		gconv.Scan(getChild.GetData(), &info)
-		perms[k].ChildLevel = info
+		perms[k].Children = info
 
 		s.getLevelAccessTreeNode(ctx, info)
 	}

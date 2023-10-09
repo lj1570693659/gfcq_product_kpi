@@ -36,12 +36,12 @@ type ProductRolesApiGetListReq struct {
 
 // ProductRolesApiGetList 项目角色信息列表(带上下级关系)
 type ProductRolesApiGetList struct {
-	ID         int                      `json:"id"`          // 主键
-	Name       string                   `json:"name"       ` //
-	Pid        uint                     `json:"pid"        ` // 上级角色
-	Explain    string                   `json:"explain"    ` // 角色与职责说明
-	Remark     string                   `json:"remark"    `  // 角色与职责说明
-	ChildLevel []ProductRolesApiGetList `json:"childLevel"`  // 子级评估信息
+	ID       int                      `json:"id"`          // 主键
+	Name     string                   `json:"name"       ` //
+	Pid      uint                     `json:"pid"        ` // 上级角色
+	Explain  string                   `json:"explain"    ` // 角色与职责说明
+	Remark   string                   `json:"remark"    `  // 角色与职责说明
+	Children []ProductRolesApiGetList `json:"children"`    // 子级评估信息
 }
 
 // ProductRolesApiDeleteReq 删除项目等级评估信息

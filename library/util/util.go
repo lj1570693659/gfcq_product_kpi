@@ -49,8 +49,31 @@ func Encrypt(str string) string {
 	return encryptStr
 }
 
+func CheckIn(lists []uint, id uint) bool {
+	isIn := false
+	if len(lists) == 0 {
+		return isIn
+	}
+	for _, v := range lists {
+		if id == v {
+			return true
+		}
+	}
+	return isIn
+}
+
 func DeleteIntSlice(a []string) []string {
 	ret := make([]string, 0, len(a))
+	for _, val := range a {
+		if !g.IsEmpty(val) {
+			ret = append(ret, val)
+		}
+	}
+	return ret
+}
+
+func DeleteInt32Slice(a []int32) []int32 {
+	ret := make([]int32, 0, len(a))
 	for _, val := range a {
 		if !g.IsEmpty(val) {
 			ret = append(ret, val)
@@ -97,6 +120,15 @@ func GetEmployAttribute(name string) uint {
 		"兼职": consts.PartTime,
 		"全职": consts.FullTime,
 		"参与": consts.PitchTime,
+	}
+	return attributeName[name]
+}
+
+func GetEmployAttributeId(name uint) string {
+	attributeName := map[uint]string{
+		consts.PartTime:  "兼职",
+		consts.FullTime:  "全职",
+		consts.PitchTime: "参与",
 	}
 	return attributeName[name]
 }
@@ -181,9 +213,6 @@ func GetLevelAssessByScore(lists []*inspirit.BudgetAssessInfo, score uint32) *in
 func GetLevelConfirmByScore(lists []*product.LevelConfirmInfo, score uint) *product.LevelConfirmInfo {
 	for _, v := range lists {
 		if get := getIndexByScore(v.ScoreRange, gconv.Float32(v.ScoreMin), gconv.Float32(v.ScoreMax), gconv.Float32(score)); get {
-			fmt.Println("score------------------", score)
-			fmt.Println("get------------------", get)
-			fmt.Println("v------------------", v)
 			return v
 		}
 	}

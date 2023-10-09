@@ -2,9 +2,11 @@ package api
 
 import (
 	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/app/service"
 	"github.com/lj1570693659/gfcq_product_kpi/library/response"
+	"net/http"
 )
 
 // Product 员工信息API管理对象
@@ -27,8 +29,10 @@ func (a *productApi) GetList(r *ghttp.Request) {
 	ctx := r.Context()
 	if service.Context.Get(ctx).User.RoleLevel == service.LevelLow {
 		input.ProductWhere.Ids = service.Context.Get(ctx).User.ProductIds
+		if len(input.ProductWhere.Ids) == 0 {
+			input.ProductWhere.Ids = []uint{0}
+		}
 	}
-
 	res, err := service.Product.GetList(ctx, input)
 	if err != nil {
 		response.JsonExit(r, response.GetListFailProduct, err.Error())
@@ -138,6 +142,12 @@ func (a *productApi) Modify(r *ghttp.Request) {
 		response.JsonExit(r, response.FormatFailEmployee, err.Error())
 	}
 
+	// 验证PM权限
+	g.Log("auth").Info(r.Context(), input)
+	if ok := service.Casbin.CheckProductAuth(r.Context(), input.Id); !ok {
+		response.JsonExit(r, http.StatusForbidden, "用户权限不足")
+	}
+
 	if out, err := service.Product.Modify(r.Context(), input); err != nil {
 		response.JsonExit(r, response.CreateFailEmployee, err.Error(), out)
 	} else {
@@ -157,6 +167,11 @@ func (a *productApi) Delete(r *ghttp.Request) {
 
 	if err := r.Parse(&input); err != nil {
 		response.JsonExit(r, response.FormatFailEmployee, err.Error())
+	}
+
+	// 验证PM权限
+	if ok := service.Casbin.CheckProductAuth(r.Context(), input.Id); !ok {
+		response.JsonExit(r, http.StatusForbidden, "用户权限不足")
 	}
 
 	if out, err := service.Product.Delete(r.Context(), input); err != nil {

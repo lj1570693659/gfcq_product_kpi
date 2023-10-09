@@ -196,6 +196,30 @@ func (s *productService) Create(ctx context.Context, in *model.ProductApiChangeR
 		// 更新项目个性化阶段定制信息
 		data.ProTypeStageId = stageInfo.Id
 		_, err = dao.Product.Modify(ctx, data)
+		if err != nil {
+			return err
+		}
+		// 更新项目经理信息
+		pmInfo, err := boot.EmployeeServer.GetOne(ctx, &common.GetOneEmployeeReq{
+			Id: gconv.Int32(data.PmId),
+		})
+		if err != nil {
+			return err
+		}
+		roles, err := boot.RolesServer.GetOne(ctx, &product.GetOneRolesReq{
+			Roles: &product.RolesInfo{
+				IsSpecial: consts.IsPm,
+			},
+		})
+		if err != nil {
+			return err
+		}
+		err = ProductMember.SyncPmInfo(ctx, &model.ProductMemberApiChangeReq{
+			ProId:         res.Id,
+			WorkNumber:    pmInfo.GetEmployee().GetWorkNumber(),
+			AttributeName: util.GetEmployAttributeId(in.Attribute),
+			PrName:        roles.GetRoles().GetName(),
+		})
 		return err
 	})
 
@@ -228,7 +252,31 @@ func (s *productService) Modify(ctx context.Context, in *model.ProductApiChangeR
 	// 更新项目个性化阶段定制信息
 	data.ProTypeStageId = stageInfo.Id
 
-	res, err = dao.Product.Modify(ctx, data)
+	err = dao.Product.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+		res, err = dao.Product.Modify(ctx, data)
+		// 更新项目经理信息
+		pmInfo, err := boot.EmployeeServer.GetOne(ctx, &common.GetOneEmployeeReq{
+			Id: gconv.Int32(data.PmId),
+		})
+		if err != nil {
+			return err
+		}
+		roles, err := boot.RolesServer.GetOne(ctx, &product.GetOneRolesReq{
+			Roles: &product.RolesInfo{
+				IsSpecial: consts.IsPm,
+			},
+		})
+		if err != nil {
+			return err
+		}
+		err = ProductMember.SyncPmInfo(ctx, &model.ProductMemberApiChangeReq{
+			ProId:         res.Id,
+			WorkNumber:    pmInfo.GetEmployee().GetWorkNumber(),
+			AttributeName: util.GetEmployAttributeId(in.Attribute),
+			PrName:        roles.GetRoles().GetName(),
+		})
+		return err
+	})
 	return res, err
 }
 

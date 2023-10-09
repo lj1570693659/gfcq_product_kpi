@@ -124,7 +124,7 @@ func (s *productStageKpiDao) GetList(ctx context.Context, in *model.ProductStage
 		return res, productEntity, err
 	}
 
-	if err = query.Scan(&productEntity); err != nil {
+	if err = query.OrderDesc(ProductStageKpi.Columns().Id).Scan(&productEntity); err != nil {
 		return res, productEntity, err
 	}
 

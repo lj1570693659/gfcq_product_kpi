@@ -79,12 +79,13 @@ type ProductApiChangeReq struct { // 员工姓名
 }
 
 type ProductMemberWhere struct {
-	ProId      uint   `v:"required#请选择需要查看的项目"  json:"proId"` // 项目ID
-	WorkNumber string `json:"workNumber"`                     // 项目名称
-	EmpId      []uint `json:"empId"`                          // 项目成员ID
-	PrId       []uint `json:"prId"`                           // 项目角色ID
-	JbId       []uint `json:"jbId"`                           // 职级ID
-	Attribute  []uint `json:"attribute"`                      // PM属性（1：全职，2：兼职）
+	ProId      uint   `json:"proId"`            // 项目ID
+	ProStageId uint   `json:"proStageId"      ` // 项目-阶段ID
+	WorkNumber string `json:"workNumber"`       // 项目名称
+	EmpId      []uint `json:"empId"`            // 项目成员ID
+	PrId       []uint `json:"prId"`             // 项目角色ID
+	JbId       []uint `json:"jbId"`             // 职级ID
+	Attribute  []uint `json:"attribute"`        // PM属性（1：全职，2：兼职）
 }
 
 // ProductMemberGetListReq 项目清单
@@ -97,6 +98,7 @@ type ProductMemberGetListReq struct {
 // ProductMemberGetListRes 项目清单
 type ProductMemberGetListRes struct {
 	ProductMemberInfo ProductMember     `json:"productMemberInfo"`
+	ProductInfo       Product           `json:"productInfo"`
 	LeaderInfo        map[string]string `json:"leaderInfo"`
 	EmployeeInfo      *v1.EmployeeInfo  `json:"employeeInfo"`
 	JobLevelInfo      *v1.JobLevelInfo  `json:"jobLevelInfo"`
@@ -105,6 +107,12 @@ type ProductMemberGetListRes struct {
 // ProductMemberApiGetOneReq 项目详情
 type ProductMemberApiGetOneReq struct {
 	ProductMember
+}
+
+// ProductMemberApiDeleteReq 项目详情
+type ProductMemberApiDeleteReq struct {
+	Id    uint `v:"required|min:0#项目唯一标注不能为空|唯一标注数据错误" json:"id"             ` // 主键信息不为空
+	ProId uint `v:"required#请选择项目" json:"proId"`                               // 项目ID
 }
 
 // ProductMemberApiChangeReq 更新项目组成员信息

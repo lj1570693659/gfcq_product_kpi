@@ -73,7 +73,7 @@ func (s *userService) SignIn(ctx context.Context, WorkNumber, password string) (
 		return userInfo, err
 	}
 	g.Log("login").Info(ctx, employeeInfo)
-	Context.SetUserEmployee(ctx, employeeInfo.EmployeeInfo)
+	Context.SetUserEmployee(ctx, &employeeInfo.EmployeeInfo)
 	return employeeInfo.EmployeeInfo, nil
 }
 
@@ -92,8 +92,17 @@ func (s *userService) CheckWorkNumber(ctx context.Context, WorkNumber string) bo
 }
 
 // GetProfile 获得用户信息详情
-func (s *userService) GetProfile(ctx context.Context) *model.User {
-	return Session.GetUser(ctx)
+func (s *userService) GetProfile(ctx context.Context) *model.UserProfileInfo {
+	info := &model.UserProfileInfo{
+		Employee: &model.Employee{},
+		User:     Session.GetUser(ctx),
+	}
+	if !g.IsNil(Context.Get(ctx).User) && !g.IsNil(Context.Get(ctx).User.EmployeeInfo) {
+		info.Employee = Context.Get(ctx).User.EmployeeInfo
+	}
+	fmt.Println("-------------------------", Context.Get(ctx).User)
+	fmt.Println("-----------Session.GetUser(ctx)--------------", Session.GetUser(ctx))
+	return info
 }
 
 func (s *userService) ChangePwd(ctx context.Context, userInfo *model.UserApiChangePwdReq) error {

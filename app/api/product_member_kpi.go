@@ -5,6 +5,7 @@ import (
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/app/service"
 	"github.com/lj1570693659/gfcq_product_kpi/library/response"
+	"net/http"
 )
 
 // ProductMemberKpi 项目小组成员绩效录入
@@ -23,6 +24,11 @@ func (a *productMemberKpiApi) Export(r *ghttp.Request) {
 
 	if err := r.Parse(&input); err != nil {
 		response.JsonExit(r, response.FormatFailProductMemberKpi, err.Error())
+	}
+
+	// 验证PM权限
+	if ok := service.Casbin.CheckProductAuth(r.Context(), input.ProId); !ok {
+		response.JsonExit(r, http.StatusForbidden, "用户权限不足")
 	}
 
 	filepath, err := service.ProductMemberKpi.Export(r.Context(), input)
@@ -46,6 +52,10 @@ func (a *productMemberKpiApi) Import(r *ghttp.Request) {
 		response.JsonExit(r, response.FormatFailProductMemberKpi, err.Error())
 	}
 
+	// 验证PM权限
+	if ok := service.Casbin.CheckProductAuth(r.Context(), input.ProId); !ok {
+		response.JsonExit(r, http.StatusForbidden, "用户权限不足")
+	}
 	err := service.ProductMemberKpi.Import(r.Context(), input)
 	if err != nil {
 		response.JsonExit(r, response.CreateFailProductMemberKpi, err.Error())
@@ -66,6 +76,10 @@ func (a *productMemberKpiApi) Create(r *ghttp.Request) {
 		response.JsonExit(r, response.FormatFailProductMemberKpi, err.Error())
 	}
 
+	// 验证PM权限
+	if ok := service.Casbin.CheckProductAuth(r.Context(), input.ProId); !ok {
+		response.JsonExit(r, http.StatusForbidden, "用户权限不足")
+	}
 	err := service.ProductMemberKpi.Create(r.Context(), input)
 	if err != nil {
 		response.JsonExit(r, response.CreateFailProductMemberKpi, err.Error())
@@ -86,9 +100,10 @@ func (a *productMemberKpiApi) Modify(r *ghttp.Request) {
 		response.JsonExit(r, response.FormatFailProductMemberKpi, err.Error())
 	}
 
-	//if g.IsEmpty(input.ID) {
-	//	response.JsonExit(r, response.FormatFailProductMemberKpi, "编辑对象数据丢失")
-	//}
+	// 验证PM权限
+	if ok := service.Casbin.CheckProductAuth(r.Context(), input.ProId); !ok {
+		response.JsonExit(r, http.StatusForbidden, "用户权限不足")
+	}
 
 	err := service.ProductMemberKpi.Modify(r.Context(), input)
 	if err != nil {
@@ -109,6 +124,11 @@ func (a *productMemberKpiApi) GetList(r *ghttp.Request) {
 
 	if err := r.Parse(&input); err != nil {
 		response.JsonExit(r, response.FormatFailProductMemberKpi, err.Error())
+	}
+
+	// 验证PM权限
+	if ok := service.Casbin.CheckProductAuth(r.Context(), input.ProId); !ok {
+		response.JsonExit(r, http.StatusForbidden, "用户权限不足")
 	}
 
 	res, err := service.ProductMemberKpi.GetList(r.Context(), input)

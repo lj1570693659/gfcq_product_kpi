@@ -5,6 +5,7 @@ import (
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/app/service"
 	"github.com/lj1570693659/gfcq_product_kpi/library/response"
+	"net/http"
 )
 
 // ProductMember 项目成员信息API管理对象
@@ -69,6 +70,10 @@ func (a *productMemberApi) Create(r *ghttp.Request) {
 		response.JsonExit(r, response.FormatFailProduct, err.Error())
 	}
 
+	// 验证PM权限
+	if ok := service.Casbin.CheckProductAuth(r.Context(), input.ProId); !ok {
+		response.JsonExit(r, http.StatusForbidden, "用户权限不足")
+	}
 	if out, err := service.ProductMember.Create(r.Context(), input); err != nil {
 		response.JsonExit(r, response.CreateFailProduct, err.Error(), out)
 	} else {
@@ -88,6 +93,11 @@ func (a *productMemberApi) Modify(r *ghttp.Request) {
 
 	if err := r.Parse(&input); err != nil {
 		response.JsonExit(r, response.FormatFailEmployee, err.Error())
+	}
+
+	// 验证PM权限
+	if ok := service.Casbin.CheckProductAuth(r.Context(), input.ProId); !ok {
+		response.JsonExit(r, http.StatusForbidden, "用户权限不足")
 	}
 
 	if out, err := service.ProductMember.Modify(r.Context(), input); err != nil {
@@ -110,9 +120,39 @@ func (a *productMemberApi) Import(r *ghttp.Request) {
 		response.JsonExit(r, response.FormatFailProductMember, err.Error())
 	}
 
+	// 验证PM权限
+	if ok := service.Casbin.CheckProductAuth(r.Context(), input.ProId); !ok {
+		response.JsonExit(r, http.StatusForbidden, "用户权限不足")
+	}
+
 	if out, err := service.ProductMember.Import(r.Context(), input); err != nil {
 		response.JsonExit(r, response.FormatFailProductMember, err.Error(), out)
 	} else {
 		response.JsonExit(r, response.Success, "ok", out)
 	}
+}
+
+// Delete @summary 创建项目基础信息
+// @tags    项目团队管理
+// @produce json
+// @param   entity  body model.ProductMemberApiChangeReq true "注册请求"
+// @router  /product/member/delete [DELETE]
+// @success 200 {object} response.JsonResponse "执行结果"
+func (a *productMemberApi) Delete(r *ghttp.Request) {
+	var input *model.ProductMemberApiDeleteReq
+
+	if err := r.Parse(&input); err != nil {
+		response.JsonExit(r, response.FormatFailProduct, err.Error())
+	}
+
+	// 验证PM权限
+	if ok := service.Casbin.CheckProductAuth(r.Context(), input.ProId); !ok {
+		response.JsonExit(r, http.StatusForbidden, "用户权限不足")
+	}
+	if out, err := service.ProductMember.Delete(r.Context(), input); err != nil {
+		response.JsonExit(r, response.CreateFailProduct, err.Error(), out)
+	} else {
+		response.JsonExit(r, response.Success, "ok", out)
+	}
+
 }

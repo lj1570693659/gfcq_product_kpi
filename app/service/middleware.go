@@ -39,7 +39,7 @@ func (s *middlewareService) Ctx(r *ghttp.Request) {
 		if err != nil && rpctypes.ErrorDesc(err) != sql.ErrNoRows.Error() {
 			response.JsonExit(r, http.StatusForbidden, err.Error())
 		}
-		Context.SetUserEmployee(r.Context(), employeeInfo.EmployeeInfo)
+		Context.SetUserEmployee(r.Context(), &employeeInfo.EmployeeInfo)
 		Context.SetUserDepartment(r.Context(), employeeInfo.DepartmentInfo)
 		Context.SetUserJob(r.Context(), employeeInfo.JobInfo)
 		Context.SetUserProduct(r.Context(), employeeInfo.ProductMemberList)
@@ -71,7 +71,7 @@ func (s *middlewareService) Role(r *ghttp.Request) {
 	}
 }
 
-// BusinessRole 鉴权中间件，验证是否在项目组内 TODO
+// BusinessRole 鉴权中间件，验证是否在项目组内
 func (s *middlewareService) BusinessRole(r *ghttp.Request) {
 	ok, err := Casbin.CheckAuth(r.Context(), Context.Get(r.Context()).User, r, BUSINESS_ROLE)
 	if err != nil {
@@ -87,7 +87,7 @@ func (s *middlewareService) BusinessRole(r *ghttp.Request) {
 // CORS 允许接口跨域请求
 func (s *middlewareService) CORS(r *ghttp.Request) {
 	corsOptions := r.Response.DefaultCORSOptions()
-	corsOptions.AllowDomain = []string{"localhost:8199", "10.24.12.84:8199", "localhost:9528", "10.24.12.84:9528"}
+	corsOptions.AllowDomain = []string{"localhost:8199", "10.24.12.84:8199", "192.168.137.1:8199", "10.80.28.218:8199", "localhost:9528", "10.80.28.218:9528", "127.0.0.1:8197"}
 	r.Response.CORS(corsOptions)
 	r.Middleware.Next()
 }
