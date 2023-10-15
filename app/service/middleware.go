@@ -87,7 +87,7 @@ func (s *middlewareService) BusinessRole(r *ghttp.Request) {
 // CORS 允许接口跨域请求
 func (s *middlewareService) CORS(r *ghttp.Request) {
 	corsOptions := r.Response.DefaultCORSOptions()
-	corsOptions.AllowDomain = []string{"localhost:8199", "10.24.12.84:8199", "192.168.137.1:8199", "10.80.28.218:8199", "localhost:9528", "10.80.28.218:9528", "127.0.0.1:8197"}
+	corsOptions.AllowDomain = []string{"localhost:8199", "10.80.8.17:8199", "192.168.137.1:8199", "10.80.28.218:8199", "localhost:9528", "10.80.28.218:9528", "127.0.0.1:8197"}
 	r.Response.CORS(corsOptions)
 	r.Middleware.Next()
 }
