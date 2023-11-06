@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/app/service"
@@ -131,6 +132,28 @@ func (a *employeeApi) Modify(r *ghttp.Request) {
 		response.JsonExit(r, response.CreateFailEmployee, err.Error())
 	} else {
 		response.JsonExit(r, response.Success, "ok")
+	}
+
+}
+
+// GetCheckIn @summary 获取员工信息列表
+// @tags    员工基础信息服务
+// @produce json
+// @param   entity  body model.Employee true "注册请求"
+// @router  /system/organize/employee/checkIn [GET]
+// @success 200 {object} response.JsonResponse "执行结果"
+func (a *employeeApi) GetCheckIn(r *ghttp.Request) {
+	var input *model.GetCheckIn
+
+	if err := r.Parse(&input); err != nil {
+		response.JsonExit(r, response.FormatFailEmployee, err.Error())
+	}
+	fmt.Println("-------------------------", input)
+	res, err := service.Employee.GetCheckIn(r.Context(), input)
+	if err != nil {
+		response.JsonExit(r, response.CreateFailEmployee, err.Error())
+	} else {
+		response.JsonExit(r, response.Success, "ok", res)
 	}
 
 }

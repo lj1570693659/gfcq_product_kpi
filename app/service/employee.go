@@ -15,8 +15,10 @@ import (
 	"github.com/lj1570693659/gfcq_product_kpi/consts"
 	"github.com/lj1570693659/gfcq_product_kpi/library/util"
 	v1 "github.com/lj1570693659/gfcq_protoc/common/v1"
+	wechat "github.com/lj1570693659/gfcq_protoc/wechat/v1"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 	"strings"
+	"time"
 )
 
 // Employee 员工信息管理服务
@@ -381,4 +383,38 @@ func (s *employeeService) GetLeader(ctx context.Context, departmentList []*v1.De
 		}
 	}
 	return leader, nil
+}
+
+// GetCheckIn 获取员工信息列表
+func (s *employeeService) GetCheckIn(ctx context.Context, input *model.GetCheckIn) (*wechat.GetUserCheckInDayDataRes, error) {
+	res := &wechat.GetUserCheckInDayDataRes{}
+	ts := time.Now().AddDate(0, 0, -1)
+	tn := time.Now().AddDate(0, 0, 0)
+	if len(input.StartTime) > 0 {
+		ts, _ = time.Parse("2006-01-02", input.StartTime)
+	}
+	if len(input.StartTime) > 0 {
+		tn, _ = time.Parse("2006-01-02", input.EndTime)
+	}
+	if input.ProId > 0 {
+		productMemberList, _ := ProductMember.GetAll(ctx, &model.ProductMemberWhere{ProId: gconv.Uint(input.ProId)})
+		if len(productMemberList) > 0 {
+			for _, v := range productMemberList {
+				input.UseridList = append(input.UseridList, v.WorkNumber)
+			}
+		}
+	}
+	fmt.Println("UseridList-------------------------", input.UseridList)
+	fmt.Println("-------------------------", len(input.UseridList))
+	res, err := boot.WechatCheckIn.GetUserCheckInDayData(ctx, &wechat.GetUserCheckInDayDataReq{
+		DepartId:   input.DepartId,
+		WorkNumber: input.UseridList,
+		StartTime:  gconv.Int32(time.Date(ts.Year(), ts.Month(), ts.Day(), 0, 0, 0, 0, ts.Location()).Unix()),
+		EndTime:    gconv.Int32(time.Date(tn.Year(), tn.Month(), tn.Day(), 0, 0, 0, 0, tn.Location()).Unix()),
+	})
+
+	if err != nil {
+		return res, err
+	}
+	return res, nil
 }

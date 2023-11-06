@@ -53,6 +53,7 @@ func init() {
 					sgoe.POST("/create", api.Employee.Create)
 					sgoe.PUT("/modify", api.Employee.Modify)
 					sgoe.GET("/info", api.Employee.GetOne)
+					sgoe.POST("/checkIn", api.Employee.GetCheckIn)
 				})
 				// 部门信息
 				sgo.Group("/department", func(dgo *ghttp.RouterGroup) {

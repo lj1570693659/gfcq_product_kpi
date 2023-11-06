@@ -8,6 +8,7 @@ import (
 	v1 "github.com/lj1570693659/gfcq_protoc/common/v1"
 	inspirit "github.com/lj1570693659/gfcq_protoc/config/inspirit/v1"
 	product "github.com/lj1570693659/gfcq_protoc/config/product/v1"
+	wechat "github.com/lj1570693659/gfcq_protoc/wechat/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -23,6 +24,8 @@ var (
 	JobLevelServer v1.JobLevelClient
 	// EmployeeJobServer 员工&&岗位关联服务
 	EmployeeJobServer v1.EmployeeJobClient
+	// WechatCheckIn 员工打卡服务
+	WechatCheckIn wechat.WechatCheckInClient
 
 	// LevelAssessServer /* ------------------------------------ */
 	// LevelAssessServer 项目等级评估配置信息
@@ -69,6 +72,7 @@ func init() {
 	JobServer = v1.NewJobClient(OrganizeServer)
 	JobLevelServer = v1.NewJobLevelClient(OrganizeServer)
 	EmployeeJobServer = v1.NewEmployeeJobClient(OrganizeServer)
+	WechatCheckIn = wechat.NewWechatCheckInClient(OrganizeServer)
 
 	// 公共配置服务
 	configServerName := g.Config("config.toml").Get("grpc.config.link")
