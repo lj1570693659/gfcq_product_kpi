@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/lj1570693659/gfcq_product_kpi/app/model"
 	"github.com/lj1570693659/gfcq_product_kpi/app/service"
 	"github.com/lj1570693659/gfcq_product_kpi/library/response"
@@ -148,7 +149,8 @@ func (a *employeeApi) GetCheckIn(r *ghttp.Request) {
 	if err := r.Parse(&input); err != nil {
 		response.JsonExit(r, response.FormatFailEmployee, err.Error())
 	}
-	fmt.Println("-------------------------", input)
+
+	g.Log("wechat").Info(r.Context(), fmt.Sprintf("查询考勤信息，查询条件：%v", input))
 	res, err := service.Employee.GetCheckIn(r.Context(), input)
 	if err != nil {
 		response.JsonExit(r, response.CreateFailEmployee, err.Error())

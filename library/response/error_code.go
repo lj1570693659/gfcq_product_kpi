@@ -91,4 +91,8 @@ const (
 
 	FormatFailLevelConfirm = 1012
 	CreateFailLevelConfirm = 1013
+
+	// AutoRemindFailTask 任务管理
+	AutoRemindFailTask = 4001
+	FormatFailTask     = 4002
 )

@@ -277,5 +277,25 @@ func init() {
 				sumg.GET("/index", api.StatisticsSummation.GetProductMemberLevel)
 			})
 		})
+
+		// 任务管理
+		group.Group("/task", func(pt *ghttp.RouterGroup) {
+			pt.Middleware(service.Middleware.Role, service.Middleware.BusinessRole)
+			// 清单、详情
+			pt.Middleware(service.Middleware.LoggedIn, service.Middleware.Role, service.Middleware.BusinessRole)
+			pt.GET("/auto_end", api.Task.AutoRemindNotEnd)
+			pt.GET("/auto_start", api.Task.AutoRemindNotStart)
+			pt.GET("/auto_upgrade", api.Task.AutoUpgrade)
+			pt.GET("/product_lists", api.Task.GetList)
+			pt.PUT("/product_modify", api.Task.ProductModify)
+			pt.GET("/npi_lists", api.Task.GetNpiList)
+			pt.PUT("/npi_modify", api.Task.NpiModify)
+			pt.GET("/quality_lists", api.Task.GetQualityList)
+			pt.PUT("/quality_modify", api.Task.QualityModify)
+			pt.GET("/produce_lists", api.Task.GetProduceList)
+			pt.PUT("/produce_modify", api.Task.ProduceModify)
+			pt.GET("/develop_lists", api.Task.GetDevelopList)
+			pt.PUT("/develop_modify", api.Task.DevelopModify)
+		})
 	})
 }

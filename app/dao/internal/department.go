@@ -20,24 +20,28 @@ type DepartmentDao struct {
 
 // DepartmentColumns defines and stores column names for table cqgf_department.
 type DepartmentColumns struct {
-	Id         string //
-	Name       string // 部门名称
-	Pid        string // 上级部门
-	Level      string // 部门层级
-	Remark     string // 预留备注信息
-	CreateTime string // 数据新增时间
-	UpdateTime string // 最后一次更新数据时间
+	Id               string //
+	Name             string // 部门名称
+	NameEn           string // 部门英文名称
+	Pid              string // 上级部门
+	DepartmentLeader string // 部门负责人的UserID
+	Level            string // 部门层级
+	Remark           string // 预留备注信息
+	CreateTime       string // 数据新增时间
+	UpdateTime       string // 最后一次更新数据时间
 }
 
 // departmentColumns holds the columns for table cqgf_department.
 var departmentColumns = DepartmentColumns{
-	Id:         "id",
-	Name:       "name",
-	Pid:        "pid",
-	Level:      "level",
-	Remark:     "remark",
-	CreateTime: "create_time",
-	UpdateTime: "update_time",
+	Id:               "id",
+	Name:             "name",
+	NameEn:           "name_en",
+	Pid:              "pid",
+	DepartmentLeader: "department_leader",
+	Level:            "level",
+	Remark:           "remark",
+	CreateTime:       "create_time",
+	UpdateTime:       "update_time",
 }
 
 // NewDepartmentDao creates and returns a new DAO object for table data access.

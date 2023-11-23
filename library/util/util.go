@@ -62,6 +62,19 @@ func CheckIn(lists []uint, id uint) bool {
 	return isIn
 }
 
+func CheckInStr(lists []string, id string) bool {
+	isIn := false
+	if len(lists) == 0 {
+		return isIn
+	}
+	for _, v := range lists {
+		if id == v {
+			return true
+		}
+	}
+	return isIn
+}
+
 func DeleteIntSlice(a []string) []string {
 	ret := make([]string, 0, len(a))
 	for _, val := range a {
@@ -335,4 +348,14 @@ func GetUserRequestTypeName(methodName uint, requestModuleLists []string) string
 	}
 	typeName := fmt.Sprintf("%s%s%s", actionName, secondModuleNameMap[moduleName], third)
 	return typeName
+}
+
+func GetTaskStatusChangeMsg(name, taskName, taskDesc string, before, later int) string {
+	statusName := map[int]string{
+		1: "未开启",
+		2: "运行中",
+		3: "已完成",
+		4: "暂停",
+	}
+	return fmt.Sprintf("%s-项目任务状态变更提醒！！ \n 任务状态：由 %s 变更为 %s \n 任务名称：%s \n 任务描述：%s", name, statusName[before], statusName[later], taskName, taskDesc)
 }

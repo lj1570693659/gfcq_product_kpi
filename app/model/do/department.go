@@ -11,12 +11,14 @@ import (
 
 // Department is the golang structure of table cqgf_department for DAO operations like Where/Data.
 type Department struct {
-	g.Meta     `orm:"table:cqgf_department, do:true"`
-	Id         interface{} //
-	Name       interface{} // 部门名称
-	Pid        interface{} // 上级部门
-	Level      interface{} // 部门层级
-	Remark     interface{} // 预留备注信息
-	CreateTime *gtime.Time // 数据新增时间
-	UpdateTime *gtime.Time // 最后一次更新数据时间
+	g.Meta           `orm:"table:cqgf_department, do:true"`
+	Id               interface{} //
+	Name             interface{} // 部门名称
+	NameEn           interface{} // 部门英文名称
+	Pid              interface{} // 上级部门
+	DepartmentLeader interface{} // 部门负责人的UserID
+	Level            interface{} // 部门层级
+	Remark           interface{} // 预留备注信息
+	CreateTime       *gtime.Time // 数据新增时间
+	UpdateTime       *gtime.Time // 最后一次更新数据时间
 }

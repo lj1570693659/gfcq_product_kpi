@@ -387,6 +387,7 @@ func (s *employeeService) GetLeader(ctx context.Context, departmentList []*v1.De
 
 // GetCheckIn 获取员工信息列表
 func (s *employeeService) GetCheckIn(ctx context.Context, input *model.GetCheckIn) (*wechat.GetUserCheckInDayDataRes, error) {
+	g.Log("wechat").Info(ctx, fmt.Sprintf("查询考勤信息server，查询条件：%v", input))
 	res := &wechat.GetUserCheckInDayDataRes{}
 	ts := time.Now().AddDate(0, 0, -1)
 	tn := time.Now().AddDate(0, 0, 0)
@@ -404,15 +405,14 @@ func (s *employeeService) GetCheckIn(ctx context.Context, input *model.GetCheckI
 			}
 		}
 	}
-	fmt.Println("UseridList-------------------------", input.UseridList)
-	fmt.Println("-------------------------", len(input.UseridList))
+	g.Log("wechat").Info(ctx, fmt.Sprintf("查询考勤信息，UseridList：%v", input.UseridList))
 	res, err := boot.WechatCheckIn.GetUserCheckInDayData(ctx, &wechat.GetUserCheckInDayDataReq{
 		DepartId:   input.DepartId,
 		WorkNumber: input.UseridList,
 		StartTime:  gconv.Int32(time.Date(ts.Year(), ts.Month(), ts.Day(), 0, 0, 0, 0, ts.Location()).Unix()),
 		EndTime:    gconv.Int32(time.Date(tn.Year(), tn.Month(), tn.Day(), 0, 0, 0, 0, tn.Location()).Unix()),
 	})
-
+	g.Log("wechat").Info(ctx, fmt.Sprintf("查询考勤信息，err：%v", err))
 	if err != nil {
 		return res, err
 	}

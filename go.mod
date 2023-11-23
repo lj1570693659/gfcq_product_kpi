@@ -8,7 +8,7 @@ require (
 	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.4.4
 	github.com/gogf/gf/v2 v2.5.1
 	github.com/gogf/swagger v1.3.0
-	github.com/lj1570693659/gfcq_protoc v0.0.0-20231104070248-efa3f61228cb
+	github.com/lj1570693659/gfcq_protoc v0.0.0-20231116005300-2f5c5d6014c3
 	github.com/xuri/excelize/v2 v2.7.1
 	go.etcd.io/etcd/api/v3 v3.5.4
 	google.golang.org/grpc v1.56.1
@@ -39,6 +39,7 @@ require (
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.3 // indirect
 	github.com/rivo/uniseg v0.1.0 // indirect
+	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/xuri/efp v0.0.0-20220603152613-6918739fd470 // indirect
 	github.com/xuri/nfp v0.0.0-20220409054826-5e722a1d9e22 // indirect
 	go.opentelemetry.io/otel v1.10.0 // indirect

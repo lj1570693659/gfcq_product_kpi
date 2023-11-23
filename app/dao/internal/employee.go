@@ -20,38 +20,42 @@ type EmployeeDao struct {
 
 // EmployeeColumns defines and stores column names for table cqgf_employee.
 type EmployeeColumns struct {
-	Id           string //
-	UserName     string // 员工姓名
-	WorkNumber   string // 员工工号
-	Sex          string // 性别（0：未知 1：男  2：女）
-	Phone        string // 手机号码
-	Email        string // 邮箱号码
-	DepartId     string // 所属部门
-	JobLevel     string // 职级
-	JobId        string // 岗位信息
-	InstructorId string // 指导老师
-	Status       string // 在职状态（1：在职 2：试用期 3：实习期 4：已离职）
-	Remark       string // 预留备注信息
-	CreateTime   string // 新增数据时间
-	UpdateTime   string // 最后一次更新数据时间
+	Id             string //
+	UserName       string // 员工姓名
+	WorkNumber     string // 员工工号
+	Sex            string // 性别（0：未知 1：男  2：女）
+	Phone          string // 手机号码
+	Email          string // 邮箱号码
+	DepartId       string // 所属部门
+	JobLevel       string // 职级
+	JobId          string // 岗位信息
+	DirectLeader   string // 直接上级
+	IsLeaderInDept string // 表示在所在的部门内是否为部门负责人。2-否；1-是
+	InstructorId   string // 指导老师
+	Status         string // 在职状态（1：在职 2：试用期 3：实习期 4：已离职）
+	Remark         string // 预留备注信息
+	CreateTime     string // 新增数据时间
+	UpdateTime     string // 最后一次更新数据时间
 }
 
 // employeeColumns holds the columns for table cqgf_employee.
 var employeeColumns = EmployeeColumns{
-	Id:           "id",
-	UserName:     "user_name",
-	WorkNumber:   "work_number",
-	Sex:          "sex",
-	Phone:        "phone",
-	Email:        "email",
-	DepartId:     "depart_id",
-	JobLevel:     "job_level",
-	JobId:        "job_id",
-	InstructorId: "instructor_id",
-	Status:       "status",
-	Remark:       "remark",
-	CreateTime:   "create_time",
-	UpdateTime:   "update_time",
+	Id:             "id",
+	UserName:       "user_name",
+	WorkNumber:     "work_number",
+	Sex:            "sex",
+	Phone:          "phone",
+	Email:          "email",
+	DepartId:       "depart_id",
+	JobLevel:       "job_level",
+	JobId:          "job_id",
+	DirectLeader:   "direct_leader",
+	IsLeaderInDept: "is_leader_in_dept",
+	InstructorId:   "instructor_id",
+	Status:         "status",
+	Remark:         "remark",
+	CreateTime:     "create_time",
+	UpdateTime:     "update_time",
 }
 
 // NewEmployeeDao creates and returns a new DAO object for table data access.
