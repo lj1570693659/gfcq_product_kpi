@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -16,7 +15,6 @@ import (
 	"github.com/lj1570693659/gfcq_product_kpi/library/util"
 	common "github.com/lj1570693659/gfcq_protoc/common/v1"
 	v1 "github.com/lj1570693659/gfcq_protoc/config/inspirit/v1"
-	"time"
 )
 
 var ProductMemberPrize = productMemberPrizeService{}
@@ -348,7 +346,7 @@ func (s *productMemberPrizeService) GetAll(ctx context.Context, in model.Product
 	return resData, nil
 }
 
-// Export
+// Export 成员绩效导出
 func (s *productMemberPrizeService) Export(ctx context.Context, in *model.ProductMemberWhere) (string, error) {
 	excelData := make([]map[string]interface{}, 0)
 
@@ -364,8 +362,6 @@ func (s *productMemberPrizeService) Export(ctx context.Context, in *model.Produc
 	fileName := "项目成员绩效奖金"
 	if len(memberPrizeList) > 0 {
 		for k, v := range memberPrizeList {
-			fmt.Println("ProductMemberKpi--------------------", v.ProductMemberKpi)
-			fmt.Println("ProductMemberPrize--------------------", v.ProductMemberPrize)
 			excelData = append(excelData, map[string]interface{}{
 				"A": k + 1,                                      // 序号
 				"B": v.ProductMemberKpi.PrName,                  // 项目角色
@@ -395,20 +391,9 @@ func (s *productMemberPrizeService) Export(ctx context.Context, in *model.Produc
 
 	}
 
-	// 保存Excel文件
-	return s.setCellValue(ctx, excelData, fileName)
-}
-
-// setCellValue 保存Excel文件
-func (s *productMemberPrizeService) setCellValue(ctx context.Context, data []map[string]interface{}, productName string) (string, error) {
 	titleList := []string{"序号", "项目角色", "工号", "姓名", "属性", "部门", "投入占比", "责任指数", "职级", "责任和职务", "工作地",
 		"主导方", "支持方", "工时占比", "绩效等级", "浮动贡献", "工时指数", "责任指数", "管理指数", "权重基准", "发放基数", "绩效比例", "实发额度"}
-	sheetName := "Sheet1"
-	fileName := fmt.Sprintf("/excel/%s-%s.xlsx", productName, time.Now().Format("2006-01-02"))
-	filepath := fmt.Sprintf("./public/%s", fileName)
-	if err := util.ExportExcel(titleList, data, sheetName, filepath); err != nil {
-		g.Log("excel").Error(ctx, err)
-	}
 
-	return fileName, nil
+	// 保存Excel文件
+	return util.SetCellValue(ctx, excelData, fileName, titleList)
 }

@@ -374,7 +374,7 @@ func (s *employeeService) GetLeader(ctx context.Context, departmentList []*v1.De
 					if err != nil {
 						return leader, nil
 					}
-					leader[v.GetName()] = fmt.Sprintf("%s-%s", leaderInfo.GetEmployee().UserName, leaderInfo.GetEmployee().WorkNumber)
+					leader[v.GetName()] = leaderInfo.GetEmployee().UserName //fmt.Sprintf("%s-%s", leaderInfo.GetEmployee().UserName, leaderInfo.GetEmployee().WorkNumber)
 				} else {
 					// 上级部门
 					leader[v.GetName()] = "-"
@@ -383,6 +383,15 @@ func (s *employeeService) GetLeader(ctx context.Context, departmentList []*v1.De
 		}
 	}
 	return leader, nil
+}
+
+func (s *employeeService) GetDepartment(ctx context.Context, departmentList []*v1.DepartmentInfo, departmentIds string) (*v1.DepartmentInfo, error) {
+	for _, v := range departmentList {
+		if v.Id == gconv.Int32(departmentIds) {
+			return v, nil
+		}
+	}
+	return nil, nil
 }
 
 // GetCheckIn 获取员工信息列表

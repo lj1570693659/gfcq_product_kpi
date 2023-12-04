@@ -247,11 +247,13 @@ func init() {
 			// 项目组成员信息
 			pg.Group("/member", func(pmg *ghttp.RouterGroup) {
 				pmg.POST("/import", api.ProductMember.Import)
+				pmg.POST("/web", api.ProductMember.WebImport)
 				pmg.GET("/lists", api.ProductMember.GetList)
 				pmg.GET("/info", api.ProductMember.GetOne)
 				pmg.POST("/create", api.ProductMember.Create)
 				pmg.PUT("/modify", api.ProductMember.Modify)
 				pmg.DELETE("/delete", api.ProductMember.Delete)
+				pmg.GET("/export", api.ProductMember.Export)
 			})
 			// 项目阶段信息
 			pg.Group("/stage", func(psg *ghttp.RouterGroup) {

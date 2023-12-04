@@ -132,6 +132,30 @@ func (a *productMemberApi) Import(r *ghttp.Request) {
 	}
 }
 
+// WebImport @summary 网页导入团队成员信息
+// @tags    项目团队管理
+// @produce json
+// @param   entity  body model.ProductMemberApiImportReq true "注册请求"
+// @router  /product/member/import [POST]
+// @success 200 {object} response.JsonResponse "执行结果"
+func (a *productMemberApi) WebImport(r *ghttp.Request) {
+	var input *model.ProductMemberApiWebImportReq
+	if err := r.Parse(&input); err != nil {
+		response.JsonExit(r, response.FormatFailProductMember, err.Error())
+	}
+
+	// 验证PM权限
+	if ok := service.Casbin.CheckProductAuth(r.Context(), input.ProId); !ok {
+		response.JsonExit(r, http.StatusForbidden, "用户权限不足")
+	}
+
+	if out, err := service.ProductMember.WebImport(r.Context(), input); err != nil {
+		response.JsonExit(r, response.FormatFailProductMember, err.Error(), out)
+	} else {
+		response.JsonExit(r, response.Success, "ok", out)
+	}
+}
+
 // Delete @summary 创建项目基础信息
 // @tags    项目团队管理
 // @produce json
@@ -153,6 +177,28 @@ func (a *productMemberApi) Delete(r *ghttp.Request) {
 		response.JsonExit(r, response.CreateFailProduct, err.Error(), out)
 	} else {
 		response.JsonExit(r, response.Success, "ok", out)
+	}
+
+}
+
+// Export @summary 导出项目组成员
+// @tags    项目团队管理
+// @produce json
+// @param   entity  body model.ProductMemberApiChangeReq true "注册请求"
+// @router  /product/member/delete [DELETE]
+// @success 200 {object} response.JsonResponse "执行结果"
+func (a *productMemberApi) Export(r *ghttp.Request) {
+	var input *model.ProductMemberWhere
+
+	if err := r.Parse(&input); err != nil {
+		response.JsonExit(r, response.FormatFailProduct, err.Error())
+	}
+
+	url, err := service.ProductMember.Export(r.Context(), input)
+	if err != nil {
+		response.JsonExit(r, response.GetListFailProduct, err.Error())
+	} else {
+		response.JsonExit(r, response.Success, "ok", url)
 	}
 
 }

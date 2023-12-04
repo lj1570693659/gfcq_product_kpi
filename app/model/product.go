@@ -97,11 +97,12 @@ type ProductMemberGetListReq struct {
 
 // ProductMemberGetListRes 项目清单
 type ProductMemberGetListRes struct {
-	ProductMemberInfo ProductMember     `json:"productMemberInfo"`
-	ProductInfo       Product           `json:"productInfo"`
-	LeaderInfo        map[string]string `json:"leaderInfo"`
-	EmployeeInfo      *v1.EmployeeInfo  `json:"employeeInfo"`
-	JobLevelInfo      *v1.JobLevelInfo  `json:"jobLevelInfo"`
+	ProductMemberInfo ProductMember      `json:"productMemberInfo"`
+	ProductInfo       Product            `json:"productInfo"`
+	LeaderInfo        map[string]string  `json:"leaderInfo"`
+	EmployeeInfo      *v1.EmployeeInfo   `json:"employeeInfo"`
+	JobLevelInfo      *v1.JobLevelInfo   `json:"jobLevelInfo"`
+	DepartmentInfo    *v1.DepartmentInfo `json:"departmentInfo"`
 }
 
 // ProductMemberApiGetOneReq 项目详情
@@ -144,6 +145,12 @@ type ProductMemberApiImportReq struct {
 	ProId       uint                     `v:"required#请选择项目" json:"proId"`          // 项目ID
 	TableData   []map[string]interface{} `v:"required#文件内容不能为空" json:"tableData"`   // 项目成员ID
 	TableHeader []string                 `v:"required#文件标题不能为空" json:"tableHeader"` // 职级ID
+}
+
+// ProductMemberApiWebImportReq 更新项目组成员信息
+type ProductMemberApiWebImportReq struct {
+	ProId      uint                `v:"required#请选择项目" json:"proId"`         // 项目ID
+	UseridList map[string][]string `v:"required#文件内容不能为空" json:"useridList"` // 项目成员ID
 }
 
 // GetDataOrder 项目绩效清单

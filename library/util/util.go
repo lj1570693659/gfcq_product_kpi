@@ -14,6 +14,7 @@ import (
 	product "github.com/lj1570693659/gfcq_protoc/config/product/v1"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -358,4 +359,16 @@ func GetTaskStatusChangeMsg(name, taskName, taskDesc string, before, later int) 
 		4: "暂停",
 	}
 	return fmt.Sprintf("%s-项目任务状态变更提醒！！ \n 任务状态：由 %s 变更为 %s \n 任务名称：%s \n 任务描述：%s", name, statusName[before], statusName[later], taskName, taskDesc)
+}
+
+// SetCellValue 保存Excel文件
+func SetCellValue(ctx context.Context, data []map[string]interface{}, productName string, titleList []string) (string, error) {
+	sheetName := "Sheet1"
+	fileName := fmt.Sprintf("/excel/%s-%s.xlsx", productName, time.Now().Format("2006-01-02"))
+	filepath := fmt.Sprintf("./public/%s", fileName)
+	if err := ExportExcel(titleList, data, sheetName, filepath); err != nil {
+		g.Log("excel").Error(ctx, err)
+	}
+
+	return fileName, nil
 }

@@ -49,7 +49,40 @@ func (s *productMemberService) Import(ctx context.Context, in *model.ProductMemb
 		return res, err
 	}
 	// 2: 读取文件内容
-	saveDataFormat, err := s.makeProductMemberExcelData(in.TableHeader, in.TableData, in.ProId)
+	saveDataFormat, err := s.makeProductMemberExcelData(in.TableData, in.ProId)
+	if err != nil {
+		return res, err
+	}
+
+	// 3: 查询项目经理信息
+	pmInfo, err := s.GetPmInfo(ctx, in.ProId)
+	if err != nil {
+		return res, err
+	}
+
+	// 3: 文件内容保存
+	err = s.SaveProductMemberFromExcel(ctx, saveDataFormat, pmInfo.GetEmployee())
+	if err != nil {
+		return res, err
+	}
+
+	// 4： 同步项目经理信息
+	err = s.SyncPmInfo(ctx, info)
+
+	return res, err
+}
+
+func (s *productMemberService) WebImport(ctx context.Context, in *model.ProductMemberApiWebImportReq) (*entity.Product, error) {
+	res := &entity.Product{}
+	// 1: 验证项目信息
+	checkProduct, info, err := s.checkInputData(ctx, &model.ProductMemberApiChangeReq{
+		ProId: in.ProId,
+	})
+	if err != nil || !checkProduct {
+		return res, err
+	}
+	// 2: 读取文件内容
+	saveDataFormat, err := s.makeProductMemberWebData(in.UseridList, in.ProId)
 	if err != nil {
 		return res, err
 	}
@@ -327,7 +360,6 @@ func (s *productMemberService) checkInputData(ctx context.Context, in *model.Pro
 			},
 		})
 
-		fmt.Println("roles----------", roles)
 		if err != nil && rpctypes.ErrorDesc(err) != sql.ErrNoRows.Error() {
 			return false, in, err
 		}
@@ -335,6 +367,26 @@ func (s *productMemberService) checkInputData(ctx context.Context, in *model.Pro
 			return false, in, errors.New(fmt.Sprintf("项目角色：%s 信息未录入，请先录入", in.PrName))
 		}
 		in.PrId = gconv.Uint(roles.GetRoles().GetId())
+		in.IsSpecial = gconv.Uint(roles.GetRoles().GetIsSpecial())
+		// 管理指数
+		in.ManageIndex, err = s.GetManageIndexByJobLevel(ctx, roles.GetRoles().GetId(), roles.GetRoles().GetPid())
+		if err != nil {
+			return false, in, err
+		}
+	} else if in.PrId > 0 {
+		roles, err := boot.RolesServer.GetOne(ctx, &productV1.GetOneRolesReq{
+			Roles: &productV1.RolesInfo{
+				Id: gconv.Int32(in.PrId),
+			},
+		})
+
+		if err != nil && rpctypes.ErrorDesc(err) != sql.ErrNoRows.Error() {
+			return false, in, err
+		}
+		if g.IsNil(roles.GetRoles()) || g.IsEmpty(roles.GetRoles().GetId()) {
+			return false, in, errors.New(fmt.Sprintf("项目角色：%s 信息未录入，请先录入", in.PrName))
+		}
+		in.PrName = roles.GetRoles().GetName()
 		in.IsSpecial = gconv.Uint(roles.GetRoles().GetIsSpecial())
 		// 管理指数
 		in.ManageIndex, err = s.GetManageIndexByJobLevel(ctx, roles.GetRoles().GetId(), roles.GetRoles().GetPid())
@@ -350,7 +402,6 @@ func (s *productMemberService) SaveProductMemberFromExcel(ctx context.Context, e
 	if len(excelData) == 0 {
 		return errors.New("文件内容识别失败，请先完善信息")
 	}
-
 	return dao.ProductMember.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 		// 查询项目优先级确认配置信息
 		for _, v := range excelData {
@@ -422,7 +473,7 @@ func (s *productMemberService) GetManageIndexByJobLevel(ctx context.Context, id,
 	return 0, nil
 }
 
-func (s *productMemberService) makeProductMemberExcelData(tableHeader []string, tableData []map[string]interface{}, proId uint) (data []*model.ProductMemberApiChangeReq, err error) {
+func (s *productMemberService) makeProductMemberExcelData(tableData []map[string]interface{}, proId uint) (data []*model.ProductMemberApiChangeReq, err error) {
 	data = make([]*model.ProductMemberApiChangeReq, 0)
 	if len(tableData) == 0 {
 		return data, errors.New("表格数据为空，请先完善数据")
@@ -471,4 +522,109 @@ func (s *productMemberService) makeProductMemberExcelData(tableHeader []string, 
 		}
 	}
 	return data, nil
+}
+
+func (s *productMemberService) makeProductMemberWebData(tableData map[string][]string, proId uint) (data []*model.ProductMemberApiChangeReq, err error) {
+	data = make([]*model.ProductMemberApiChangeReq, 0)
+	if len(tableData) == 0 {
+		return data, errors.New("数据为空，请选择项目组成员数据")
+	}
+	fmt.Println("tableData--------------", tableData)
+	for key, value := range tableData {
+		for _, v := range value {
+			info := &model.ProductMemberApiChangeReq{
+				ProId:      proId,
+				WorkNumber: v,
+				PrId:       gconv.Uint(key),
+			}
+			if len(info.WorkNumber) > 0 && info.PrId > 0 {
+				data = append(data, info)
+			}
+		}
+	}
+	fmt.Println("data--------------", data)
+	return data, nil
+}
+
+func (s *productMemberService) Export(ctx context.Context, in *model.ProductMemberWhere) (string, error) {
+	excelData := make([]map[string]interface{}, 0)
+
+	resData := make([]model.ProductMemberGetListRes, 0)
+	dataEntity, err := dao.ProductMember.GetAll(ctx, in)
+	if err != nil {
+		return "", err
+	}
+	fmt.Println("dataEntity-----------------", len(dataEntity))
+
+	departList, err := boot.DepertmentServer.GetListWithoutPage(ctx, &v1.GetListWithoutDepartmentReq{})
+	if err != nil {
+		return "", err
+	}
+
+	// 项目清单
+	productList, err := dao.Product.GetAll(ctx, model.ProductWhere{})
+	if err != nil {
+		return "", err
+	}
+
+	if len(dataEntity) > 0 {
+		for _, v := range dataEntity {
+			info := model.ProductMemberGetListRes{}
+			info.ProductMemberInfo = *v
+			for _, p := range productList {
+				if p.Id == v.ProId {
+					info.ProductInfo = p
+				}
+			}
+
+			// 姓名
+			employ, err := boot.EmployeeServer.GetOne(ctx, &v1.GetOneEmployeeReq{Id: gconv.Int32(v.EmpId)})
+			if err != nil {
+				return "", err
+			}
+			info.EmployeeInfo = employ.GetEmployee()
+			// 职级
+			jobLevel, err := boot.JobLevelServer.GetOne(ctx, &v1.GetOneJobLevelReq{Id: gconv.Int32(employ.GetEmployee().GetJobLevel())})
+			if err != nil {
+				return "", err
+			}
+			info.JobLevelInfo = jobLevel.GetJobLevel()
+
+			// 直接上级
+			info.LeaderInfo, err = Employee.GetLeader(ctx, departList.GetData(), employ.GetEmployee().GetDepartId())
+			if err != nil {
+				return "", err
+			}
+
+			info.DepartmentInfo, err = Employee.GetDepartment(ctx, departList.GetData(), employ.GetEmployee().GetDepartId())
+			resData = append(resData, info)
+		}
+	}
+	fmt.Println("resData-----------------", len(resData))
+	fileName := "项目组成员"
+	if len(resData) > 0 {
+		for k, v := range resData {
+			excelData = append(excelData, map[string]interface{}{
+				"A": k + 1,                                          // 序号
+				"B": v.ProductMemberInfo.PrName,                     // 项目角色
+				"C": v.ProductMemberInfo.WorkNumber,                 // 工号
+				"D": v.EmployeeInfo.UserName,                        // 姓名
+				"E": v.ProductMemberInfo.Type,                       // 分类
+				"F": v.DepartmentInfo.Name,                          // 部门
+				"G": v.ProductMemberInfo.PutInto,                    // 投入水平
+				"H": v.JobLevelInfo.Name,                            // 职级
+				"I": v.ProductMemberInfo.WorkAddress,                // 工作地
+				"J": v.ProductMemberInfo.SpecificDuty,               // 职责和任务
+				"K": v.ProductMemberInfo.Remark,                     // 备注
+				"L": util.GetIsGuide(v.ProductMemberInfo.IsGuide),   // 主导方
+				"M": util.GetIsGuide(v.ProductMemberInfo.IsSupport), // 支持方
+			})
+		}
+
+	}
+
+	titleList := []string{"序号", "项目角色", "工号", "姓名", "分类", "部门", "投入占比", "职级", "工作地", "责任和职务", "备注", "主导方", "支持方"}
+
+	// 保存Excel文件
+	return util.SetCellValue(ctx, excelData, fileName, titleList)
 }
